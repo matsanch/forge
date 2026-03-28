@@ -1,7 +1,7 @@
-const CACHE = 'forge-v4';
+const CACHE = 'forge-v5';
 const ASSETS = [
   '/', '/index.html', '/iron.html', '/anvil.html', '/vault.html',
-  '/guild.html', '/library.html', '/quick-input.html', '/login.html',
+  '/guild.html', '/library.html', '/quick-input.html', '/login.html', '/migrate.html',
   '/forge-shared.css', '/forge-shared.js', '/supabase-config.js',
   '/data-layer.js', '/input-parser.js', '/manifest.json'
 ];
@@ -38,6 +38,6 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
     caches.match(e.request)
-      .then(r => cleanResponse(r) || fetch(e.request.url))
+      .then(r => cleanResponse(r) || fetch(e.request.url).then(cleanResponse))
   );
 });
