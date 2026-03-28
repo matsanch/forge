@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE FORGE — VAULT</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="forge-shared.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<link rel="manifest" href="manifest.json">
+</head>
+<body>
+<div id="forge-loading" style="position:fixed;inset:0;background:#0f0f1a;display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="font-family:Cinzel,serif;color:#d4a844;font-size:1.5rem;letter-spacing:.3em">FORGING...</div>
+</div>
+<div class="container">
+
+  <div class="sub-header">
+    <a href="index.html" class="back-link"><i class="fas fa-chevron-left"></i> FORGE</a>
+    <h1><i class="fas fa-vault" style="color:var(--ember)"></i> VAULT DOMAIN <span id="sync-status" style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-left:8px" title="Online"></span></h1>
+    <span class="domain-badge" id="vault-level-badge">LVL 0 — Unforged</span>
+  </div>
+
+  <!-- STATS OVERVIEW -->
+  <div class="grid-3" id="vault-stats" style="margin-bottom:20px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="openModal('expense')"><i class="fas fa-coins"></i> Log Expense</button>
+    <button class="btn" onclick="openModal('income')"><i class="fas fa-gem"></i> Log Income</button>
+    <button class="btn" onclick="openModal('budget-goal')"><i class="fas fa-bullseye"></i> Set Budget Goal</button>
+  </div>
+
+  <div class="grid-2">
+    <!-- EXPENSE BREAKDOWN -->
+    <div class="panel">
+      <div class="panel-title"><i class="fas fa-chart-pie"></i> EXPENSE BREAKDOWN</div>
+      <div id="expense-breakdown"></div>
+    </div>
+
+    <!-- INCOME vs EXPENSE TREND -->
+    <div class="panel">
+      <div class="panel-title"><i class="fas fa-chart-line"></i> MONTHLY TREND</div>
+      <div id="monthly-trend"></div>
+    </div>
+  </div>
+
+  <!-- TRANSACTION LIST -->
+  <div class="panel">
+    <div class="panel-title"><i class="fas fa-list"></i> TRANSACTIONS</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn btn-sm" onclick="filterTx('all')">All</button>
+      <button class="btn btn-sm" onclick="filterTx('expense')">Expenses</button>
+      <button class="btn btn-sm" onclick="filterTx('income')">Income</button>
+    </div>
+    <div id="tx-list"></div>
+  </div>
+
+  <!-- BUDGET GOALS -->
+  <div class="panel">
+    <div class="panel-title"><i class="fas fa-bullseye"></i> BUDGET GOALS</div>
+    <div id="budget-goals"></div>
+  </div>
+
+  <!-- FINANCIAL LITERACY LOG -->
+  <div class="panel">
+    <div class="panel-title"><i class="fas fa-graduation-cap"></i> FINANCIAL LITERACY TRACKER</div>
+    <div id="fin-literacy"></div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-expense">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('expense')">&times;</button>
+    <h2><i class="fas fa-coins"></i> Log Expense</h2>
+    <form id="expense-form" onsubmit="submitExpense(event)">
+      <div class="form-row">
+        <input type="date" class="form-input form-input-md" id="exp-date">
+        <input type="number" class="form-input form-input-sm" id="exp-amount" placeholder="CHF" required min="0" step="0.01">
+      </div>
+      <div class="form-row">
+        <select class="form-input form-input-md" id="exp-category">
+          <option value="food">Food</option>
+          <option value="transport">Transport</option>
+          <option value="rent">Rent</option>
+          <option value="insurance">Insurance</option>
+          <option value="subscription">Subscription</option>
+          <option value="social">Social</option>
+          <option value="gear">Gear</option>
+          <option value="groceries">Groceries</option>
+          <option value="health">Health</option>
+          <option value="education">Education</option>
+          <option value="other">Other</option>
+        </select>
+        <input type="text" class="form-input" id="exp-note" placeholder="Note (optional)">
+      </div>
+      <button type="submit" class="form-submit">LOG EXPENSE</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-income">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('income')">&times;</button>
+    <h2><i class="fas fa-gem"></i> Log Income</h2>
+    <form id="income-form" onsubmit="submitIncome(event)">
+      <div class="form-row">
+        <input type="date" class="form-input form-input-md" id="inc-date">
+        <input type="number" class="form-input form-input-sm" id="inc-amount" placeholder="CHF" required min="0" step="0.01">
+      </div>
+      <div class="form-row">
+        <select class="form-input form-input-md" id="inc-source">
+          <option value="parents">Parents</option>
+          <option value="internship">Internship</option>
+          <option value="swimming-lessons">Swimming Lessons</option>
+          <option value="freelance">Freelance</option>
+          <option value="other">Other</option>
+        </select>
+        <input type="text" class="form-input" id="inc-note" placeholder="Note (optional)">
+      </div>
+      <button type="submit" class="form-submit">LOG INCOME</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-budget-goal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('budget-goal')">&times;</button>
+    <h2><i class="fas fa-bullseye"></i> Set Budget Goals</h2>
+    <form onsubmit="submitBudgetGoal(event)">
+      <div class="form-row">
+        <label style="font-size:.78rem">Monthly spend target (CHF):</label>
+        <input type="number" class="form-input form-input-md" id="bg-monthly" min="0" step="50">
+      </div>
+      <div class="form-row">
+        <label style="font-size:.78rem">Savings rate target (%):</label>
+        <input type="number" class="form-input form-input-sm" id="bg-savings" min="0" max="100" value="10">
+      </div>
+      <button type="submit" class="form-submit">SAVE GOALS</button>
+    </form>
+  </div>
+</div>
+
+<script src="forge-shared.js"></script>
+<script src="data-layer.js"></script>
+<script>
+// ========================================================================
+// VAULT SUBPAGE — Financial Tracking & Budget Management
+// ========================================================================
+
+let txFilter = 'all';
+
+function renderAll() {
+  const lvl = S.domains.vault;
+  document.getElementById('vault-level-badge').textContent = `LVL ${lvl} — ${DOMAIN_META.vault.titles[lvl]}`;
+  renderVaultStats();
+  renderExpenseBreakdown();
+  renderMonthlyTrend();
+  renderTxList();
+  renderBudgetGoals();
+  renderFinLiteracy();
+}
+
+function renderVaultStats() {
+  const el = document.getElementById('vault-stats');
+  const ym = today().slice(0,7);
+  const me = S.expenses.filter(e => e.date.startsWith(ym));
+  const mi = S.income.filter(i => i.date.startsWith(ym));
+  const te = me.reduce((a,e) => a+e.amount, 0);
+  const ti = mi.reduce((a,i) => a+i.amount, 0);
+  const net = ti - te;
+  const rate = ti > 0 ? Math.round((net/ti)*100) : 0;
+  const d = new Date(), dom = d.getDate();
+  const dailyBurn = dom > 0 ? te/dom : 0;
+
+  const daysInMonth = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+  const projected = dom > 0 ? Math.round(dailyBurn * daysInMonth) : 0;
+  const runway = dailyBurn > 0 ? Math.round(net > 0 ? (ti / dailyBurn) : 0) : '—';
+
+  el.innerHTML = [
+    { label:'Monthly Income', value: ti.toFixed(0), color:'' },
+    { label:'Monthly Expenses', value: te.toFixed(0), color:'' },
+    { label:'Net', value: (net>=0?'+':'')+net.toFixed(0), color: net>=0?'var(--green)':'var(--ember)' },
+    { label:'Savings Rate', value: rate + '%', color: rate>=10?'var(--green)':rate>=0?'var(--gold)':'var(--ember)' },
+    { label:'Daily Burn', value: dailyBurn.toFixed(1), color:'' },
+    { label:'Projected Monthly', value: projected.toFixed(0), color:'' },
+    { label:'Days of Runway', value: runway, color:'' }
+  ].map(s => `<div class="stat-mini"><span class="sm-value" ${s.color?`style="color:${s.color}"`:''}">${s.value}</span><span class="sm-label">${s.label}</span></div>`).join('');
+}
+
+function renderExpenseBreakdown() {
+  const el = document.getElementById('expense-breakdown');
+  const ym = today().slice(0,7);
+  const me = S.expenses.filter(e => e.date.startsWith(ym));
+  if (!me.length) { el.innerHTML = '<div class="empty-state">No expenses this month.</div>'; return; }
+  // TODO: Agent renders category bars with percentages
+  const cats = {};
+  me.forEach(e => { cats[e.category] = (cats[e.category]||0) + e.amount; });
+  const total = me.reduce((a,e) => a+e.amount, 0);
+  el.innerHTML = Object.entries(cats).sort((a,b) => b[1]-a[1]).map(([cat,amt]) => {
+    const pct = total > 0 ? ((amt/total)*100).toFixed(0) : 0;
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="font-family:'Fira Code',monospace;font-size:.72rem;width:90px">${cat}</span>
+      <div style="flex:1;height:16px;background:rgba(212,168,68,.1);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--ember);border-radius:3px"></div></div>
+      <span style="font-family:'Fira Code',monospace;font-size:.72rem;width:80px;text-align:right">${amt.toFixed(0)} (${pct}%)</span>
+    </div>`;
+  }).join('');
+}
+
+function renderMonthlyTrend() {
+  const el = document.getElementById('monthly-trend');
+  // Build last 6 months
+  const months = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push(d.toISOString().slice(0,7));
+  }
+  const data = months.map(ym => {
+    const inc = S.income.filter(i => i.date.startsWith(ym)).reduce((a,i) => a+i.amount, 0);
+    const exp = S.expenses.filter(e => e.date.startsWith(ym)).reduce((a,e) => a+e.amount, 0);
+    return { ym, inc, exp };
+  });
+  const hasData = data.some(d => d.inc > 0 || d.exp > 0);
+  if (!hasData) { el.innerHTML = '<div class="empty-state">Track for multiple months to see trends.</div>'; return; }
+  const maxVal = Math.max(...data.map(d => Math.max(d.inc, d.exp)), 1);
+  el.innerHTML = `<div style="display:flex;gap:8px;align-items:flex-end;height:140px;padding-top:10px">${
+    data.map(d => {
+      const hInc = Math.max((d.inc/maxVal)*110, d.inc>0?4:0);
+      const hExp = Math.max((d.exp/maxVal)*110, d.exp>0?4:0);
+      const label = d.ym.slice(5);
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">
+        <div style="display:flex;gap:2px;align-items:flex-end;height:110px">
+          <div style="width:14px;background:var(--green);border-radius:2px 2px 0 0;height:${hInc}px;opacity:.7" title="Income: ${d.inc.toFixed(0)}"></div>
+          <div style="width:14px;background:var(--ember);border-radius:2px 2px 0 0;height:${hExp}px;opacity:.7" title="Expenses: ${d.exp.toFixed(0)}"></div>
+        </div>
+        <span style="font-family:'Fira Code',monospace;font-size:.6rem;opacity:.5">${label}</span>
+      </div>`;
+    }).join('')
+  }</div>
+  <div style="display:flex;gap:16px;justify-content:center;margin-top:10px;font-size:.65rem;opacity:.6">
+    <span><span style="color:var(--green)">&#9632;</span> Income</span>
+    <span><span style="color:var(--ember)">&#9632;</span> Expenses</span>
+  </div>`;
+}
+
+function filterTx(type) { txFilter = type; renderTxList(); }
+
+function renderTxList() {
+  const el = document.getElementById('tx-list');
+  const ym = today().slice(0,7);
+  let items = [];
+  if (txFilter !== 'income') items.push(...S.expenses.filter(e=>e.date.startsWith(ym)).map(e=>({...e,type:'expense'})));
+  if (txFilter !== 'expense') items.push(...S.income.filter(i=>i.date.startsWith(ym)).map(i=>({...i,type:'income'})));
+  items.sort((a,b) => b.date.localeCompare(a.date));
+  if (!items.length) { el.innerHTML = '<div class="empty-state">No transactions this month.</div>'; return; }
+
+  let running = 0;
+  // Sort ascending for running total calc, then reverse for display
+  const sorted = [...items].sort((a,b) => a.date.localeCompare(b.date));
+  sorted.forEach(t => { running += t.type==='income' ? t.amount : -t.amount; t._running = running; });
+  items.forEach(t => { t._running = sorted.find(s=>s.id===t.id)._running; });
+
+  el.innerHTML = `<div style="max-height:400px;overflow-y:auto"><table class="data-table"><thead><tr><th>Date</th><th></th><th>CHF</th><th>Category</th><th>Note</th><th>Balance</th><th></th></tr></thead><tbody>${
+    items.map(t => `<tr>
+      <td>${t.date}</td>
+      <td style="color:${t.type==='expense'?'var(--ember)':'var(--green)'}">${t.type==='expense'?'-':'+'}</td>
+      <td style="color:${t.type==='expense'?'var(--ember)':'var(--green)'}">${t.amount.toFixed(2)}</td>
+      <td><span class="tag">${t.category||t.source||''}</span></td>
+      <td>${esc(t.note||'')}</td>
+      <td style="color:${t._running>=0?'var(--green)':'var(--ember)'}; font-family:'Fira Code',monospace;font-size:.7rem">${t._running.toFixed(2)}</td>
+      <td><button class="btn btn-delete btn-sm" onclick="deleteTx('${t.id}','${t.type}')">&times;</button></td>
+    </tr>`).join('')
+  }</tbody></table></div>`;
+}
+
+function renderBudgetGoals() {
+  const el = document.getElementById('budget-goals');
+  const goals = S.vault.budgetGoals || { monthlyTarget: 0, savingsTarget: 10 };
+  const ym = today().slice(0,7);
+  const totalExp = S.expenses.filter(e => e.date.startsWith(ym)).reduce((a,e) => a+e.amount, 0);
+  const totalInc = S.income.filter(i => i.date.startsWith(ym)).reduce((a,i) => a+i.amount, 0);
+  const net = totalInc - totalExp;
+  const actualSavingsRate = totalInc > 0 ? Math.round((net/totalInc)*100) : 0;
+
+  const spendPct = goals.monthlyTarget > 0 ? Math.min((totalExp/goals.monthlyTarget)*100, 150) : 0;
+  const spendOver = goals.monthlyTarget > 0 && totalExp > goals.monthlyTarget;
+  const savingsPct = goals.savingsTarget > 0 ? Math.min((Math.max(actualSavingsRate,0)/goals.savingsTarget)*100, 150) : 0;
+  const savingsMet = actualSavingsRate >= goals.savingsTarget;
+
+  const bar = (label, current, target, pct, good, unit) => `
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;font-family:'Fira Code',monospace;font-size:.75rem;margin-bottom:4px">
+        <span>${label}</span>
+        <span style="color:${good?'var(--green)':'var(--ember)'}">${current}${unit} / ${target}${unit}</span>
+      </div>
+      <div style="height:18px;background:rgba(212,168,68,.1);border-radius:4px;overflow:hidden;position:relative">
+        <div style="height:100%;width:${Math.min(pct,100)}%;background:${good?'var(--green)':'var(--ember)'};border-radius:4px;transition:width .5s"></div>
+        ${pct>100?`<div style="position:absolute;right:4px;top:1px;font-size:.6rem;color:var(--bone)">${Math.round(pct)}%</div>`:''}
+      </div>
+    </div>`;
+
+  if (!goals.monthlyTarget && !goals.savingsTarget) {
+    el.innerHTML = '<div class="empty-state">Set budget goals to track your progress.</div>';
+    return;
+  }
+
+  el.innerHTML =
+    (goals.monthlyTarget > 0 ? bar('Monthly Spending', totalExp.toFixed(0), goals.monthlyTarget, spendPct, !spendOver, ' CHF') : '') +
+    (goals.savingsTarget > 0 ? bar('Savings Rate', actualSavingsRate, goals.savingsTarget, savingsPct, savingsMet, '%') : '');
+}
+
+function renderFinLiteracy() {
+  const el = document.getElementById('fin-literacy');
+  const litDays = S.dailyLogs.filter(l => l.finLiteracy);
+  if (!litDays.length) { el.innerHTML = '<div class="empty-state">Check "Financial literacy task" in your daily check-ins to track progress.</div>'; return; }
+
+  // Streak calculation
+  const sortedDates = litDays.map(l => l.date).sort().reverse();
+  let streak = 0;
+  const t = today();
+  let check = new Date(t);
+  for (const d of sortedDates) {
+    const ds = check.toISOString().slice(0,10);
+    if (d === ds) { streak++; check.setDate(check.getDate()-1); }
+    else if (d < ds) break;
+  }
+
+  // Topics checklist
+  const topics = [
+    { key:'swissTax', label:'Swiss tax basics', icon:'fa-landmark' },
+    { key:'pillar3a', label:'Pillar 3a research', icon:'fa-piggy-bank' },
+    { key:'insurance', label:'Insurance comparison', icon:'fa-shield-halved' },
+    { key:'investing', label:'Investing fundamentals', icon:'fa-chart-line' }
+  ];
+  const learned = S.vault.finLiteracyTopics || {};
+
+  el.innerHTML = `
+    <div style="display:flex;gap:20px;margin-bottom:14px;flex-wrap:wrap">
+      <div class="stat-mini" style="min-width:80px"><span class="sm-value">${litDays.length}</span><span class="sm-label">Total Days</span></div>
+      <div class="stat-mini" style="min-width:80px"><span class="sm-value" style="color:var(--green)">${streak}</span><span class="sm-label">Current Streak</span></div>
+    </div>
+    <div style="font-size:.78rem;margin-bottom:8px;color:var(--gold);font-family:'Cinzel',serif">Knowledge Areas</div>
+    ${topics.map(t => {
+      const done = learned[t.key];
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:.78rem;cursor:pointer" onclick="toggleFinTopic('${t.key}')">
+        <i class="fas ${done?'fa-check-circle':'fa-circle'}" style="color:${done?'var(--green)':'rgba(240,230,211,.2)'};font-size:.9rem"></i>
+        <i class="fas ${t.icon}" style="color:var(--gold);width:16px;text-align:center;font-size:.7rem"></i>
+        <span style="opacity:${done?.9:.5}">${t.label}</span>
+      </div>`;
+    }).join('')}
+    <div style="font-size:.65rem;opacity:.3;margin-top:10px">Click to mark topics as explored. Log daily check-ins to grow your streak.</div>`;
+}
+
+// ==================== SUBMISSIONS ====================
+async function submitExpense(e) {
+  e.preventDefault();
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const exp={ id:uid(), date:document.getElementById('exp-date').value||today(), amount:parseFloat(document.getElementById('exp-amount').value), category:document.getElementById('exp-category').value, note:document.getElementById('exp-note').value };
+  S.expenses.push(exp);
+  await dbInsert('expenses',{user_id:userId,...exp});
+  cacheState(); closeModal('expense'); renderAll();
+  document.getElementById('expense-form').reset();
+}
+
+async function submitIncome(e) {
+  e.preventDefault();
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const inc={ id:uid(), date:document.getElementById('inc-date').value||today(), amount:parseFloat(document.getElementById('inc-amount').value), source:document.getElementById('inc-source').value, note:document.getElementById('inc-note').value };
+  S.income.push(inc);
+  await dbInsert('income',{user_id:userId,...inc});
+  cacheState(); closeModal('income'); renderAll();
+  document.getElementById('income-form').reset();
+}
+
+async function submitBudgetGoal(e) {
+  e.preventDefault();
+  S.vault.budgetGoals = {
+    monthlyTarget: parseFloat(document.getElementById('bg-monthly').value) || 0,
+    savingsTarget: parseFloat(document.getElementById('bg-savings').value) || 10
+  };
+  await dbUpsertProfile({budgetGoals:S.vault.budgetGoals});
+  cacheState(); closeModal('budget-goal'); renderAll();
+}
+
+async function toggleFinTopic(key) {
+  if (!S.vault.finLiteracyTopics) S.vault.finLiteracyTopics = {};
+  S.vault.finLiteracyTopics[key] = !S.vault.finLiteracyTopics[key];
+  await dbUpsertProfile({finLiteracyTopics:S.vault.finLiteracyTopics});
+  cacheState(); renderFinLiteracy();
+}
+
+async function deleteTx(id, type) {
+  if (type==='expense') S.expenses = S.expenses.filter(e=>e.id!==id);
+  else S.income = S.income.filter(i=>i.id!==id);
+  await dbDelete(type==='expense'?'expenses':'income',id);
+  cacheState(); renderAll();
+}
+
+function openModal(name) {
+  document.getElementById('modal-'+name).classList.add('open');
+  if (name==='expense') document.getElementById('exp-date').value = today();
+  if (name==='income') document.getElementById('inc-date').value = today();
+  if (name==='budget-goal') {
+    document.getElementById('bg-monthly').value = S.vault.budgetGoals?.monthlyTarget || '';
+    document.getElementById('bg-savings').value = S.vault.budgetGoals?.savingsTarget || 10;
+  }
+}
+function closeModal(name) { document.getElementById('modal-'+name).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+
+initForge(() => renderAll());
+</script>
+<a href="quick-input.html" class="qi-fab" title="Quick Input"><i class="fas fa-microphone"></i></a>
+</body>
+</html>

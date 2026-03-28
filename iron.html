@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE FORGE — IRON</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="forge-shared.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<link rel="manifest" href="manifest.json">
+</head>
+<body>
+<div id="forge-loading" style="position:fixed;inset:0;background:#0f0f1a;display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="font-family:Cinzel,serif;color:#d4a844;font-size:1.5rem;letter-spacing:.3em">FORGING...</div>
+</div>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="sub-header">
+    <a href="index.html" class="back-link"><i class="fas fa-chevron-left"></i> FORGE</a>
+    <h1><i class="fas fa-dumbbell" style="color:var(--green)"></i> IRON DOMAIN <span id="sync-status" style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-left:8px" title="Online"></span></h1>
+    <span class="domain-badge" id="iron-level-badge">LVL 0 — Unforged</span>
+  </div>
+
+  <!-- STATS OVERVIEW -->
+  <div class="grid-3" id="iron-stats" style="margin-bottom:20px">
+    <!-- JS fills: sessions this week, total volume, sleep avg, streak, PRs, etc. -->
+  </div>
+
+  <!-- ACTION BUTTONS -->
+  <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="openModal('gym')"><i class="fas fa-dumbbell"></i> Log Gym Workout</button>
+    <button class="btn" onclick="openModal('swimming')"><i class="fas fa-person-swimming"></i> Log Swimming</button>
+    <button class="btn" onclick="openModal('boxing')"><i class="fas fa-hand-fist"></i> Log Boxing</button>
+  </div>
+
+  <div class="grid-2">
+    <!-- LEFT: RECENT WORKOUTS -->
+    <div class="panel">
+      <div class="panel-title"><i class="fas fa-dumbbell"></i> GYM WORKOUTS</div>
+      <div id="gym-list"></div>
+      <!-- Each entry shows: date, muscles hit, total sets, top exercises, notes -->
+      <!-- Agent task: render workout cards with volume breakdown per muscle group -->
+    </div>
+
+    <!-- RIGHT: SWIMMING + BOXING -->
+    <div>
+      <div class="panel">
+        <div class="panel-title"><i class="fas fa-person-swimming"></i> SWIMMING SESSIONS</div>
+        <div id="swimming-list"></div>
+        <!-- Each entry shows: date, distance, sets/drills, technique notes -->
+        <!-- Agent task: render swimming cards with drill breakdown -->
+      </div>
+      <div class="panel">
+        <div class="panel-title"><i class="fas fa-hand-fist"></i> BOXING SESSIONS</div>
+        <div id="boxing-list"></div>
+        <!-- Each entry shows: date, rounds, mistakes made, what to work on -->
+        <!-- Agent task: render boxing cards with mistake tracking -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MUSCLE VOLUME TRACKER -->
+  <div class="panel">
+    <div class="panel-title"><i class="fas fa-chart-bar"></i> WEEKLY VOLUME BY MUSCLE GROUP</div>
+    <div id="volume-chart">
+      <!-- Agent task: bar chart or table showing sets per muscle group this week -->
+      <!-- Muscle groups: Chest, Back, Shoulders, Biceps, Triceps, Quads, Hamstrings, Glutes, Core, Calves -->
+    </div>
+  </div>
+
+  <!-- PROGRESSIVE OVERLOAD LOG -->
+  <div class="panel">
+    <div class="panel-title"><i class="fas fa-arrow-trend-up"></i> PROGRESSIVE OVERLOAD TRACKER</div>
+    <div id="pr-log">
+      <!-- Agent task: table of key lifts with date, weight, reps, and trend -->
+      <!-- Key lifts: Bench, Squat, Deadlift, OHP, Row, plus user-defined -->
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- GYM WORKOUT MODAL -->
+<div class="modal-overlay" id="modal-gym">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('gym')">&times;</button>
+    <h2><i class="fas fa-dumbbell"></i> Log Gym Workout</h2>
+    <form id="gym-form" onsubmit="submitGymWorkout(event)">
+      <div class="form-row">
+        <label style="font-size:.78rem;opacity:.6">Date:</label>
+        <input type="date" class="form-input form-input-md" id="gym-date">
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Exercises</div>
+        <div id="exercise-rows">
+          <!-- Dynamic rows: exercise name, muscle group, sets, reps, weight -->
+          <!-- Agent task: implement addExerciseRow() for dynamic form rows -->
+        </div>
+        <button type="button" class="btn btn-sm" onclick="addExerciseRow()"><i class="fas fa-plus"></i> Add Exercise</button>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Session Notes</div>
+        <div class="form-row">
+          <select class="form-input form-input-md" id="gym-energy">
+            <option value="5">Energy: 5/5 (peak)</option>
+            <option value="4">Energy: 4/5 (good)</option>
+            <option value="3" selected>Energy: 3/5 (normal)</option>
+            <option value="2">Energy: 2/5 (low)</option>
+            <option value="1">Energy: 1/5 (depleted)</option>
+          </select>
+          <input type="number" class="form-input form-input-sm" id="gym-duration" placeholder="min" min="0">
+        </div>
+        <textarea class="form-input" id="gym-notes" placeholder="PRs hit, form notes, injuries, what to change next time"></textarea>
+      </div>
+      <button type="submit" class="form-submit">LOG WORKOUT</button>
+    </form>
+  </div>
+</div>
+
+<!-- SWIMMING MODAL -->
+<div class="modal-overlay" id="modal-swimming">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('swimming')">&times;</button>
+    <h2><i class="fas fa-person-swimming"></i> Log Swimming Session</h2>
+    <form id="swimming-form" onsubmit="submitSwimming(event)">
+      <div class="form-row">
+        <label style="font-size:.78rem;opacity:.6">Date:</label>
+        <input type="date" class="form-input form-input-md" id="swim-date">
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Session Details</div>
+        <div class="form-row">
+          <input type="number" class="form-input form-input-sm" id="swim-distance" placeholder="meters" min="0">
+          <label style="font-size:.78rem;opacity:.6">Total distance (m)</label>
+        </div>
+        <div class="form-row">
+          <input type="number" class="form-input form-input-sm" id="swim-duration" placeholder="min" min="0">
+          <label style="font-size:.78rem;opacity:.6">Duration (min)</label>
+        </div>
+        <div class="form-row">
+          <select class="form-input form-input-md" id="swim-type">
+            <option value="freestyle">Freestyle</option>
+            <option value="backstroke">Backstroke</option>
+            <option value="breaststroke">Breaststroke</option>
+            <option value="butterfly">Butterfly</option>
+            <option value="mixed">Mixed/Drills</option>
+            <option value="open-water">Open Water</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Drills / Sets</div>
+        <div id="swim-drill-rows">
+          <!-- Agent task: dynamic drill rows (drill name, distance, rest, notes) -->
+        </div>
+        <button type="button" class="btn btn-sm" onclick="addSwimDrillRow()"><i class="fas fa-plus"></i> Add Drill/Set</button>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Notes</div>
+        <textarea class="form-input" id="swim-notes" placeholder="Technique focus, lap times, breathing pattern, what felt off"></textarea>
+      </div>
+      <button type="submit" class="form-submit">LOG SWIMMING</button>
+    </form>
+  </div>
+</div>
+
+<!-- BOXING MODAL -->
+<div class="modal-overlay" id="modal-boxing">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('boxing')">&times;</button>
+    <h2><i class="fas fa-hand-fist"></i> Log Boxing Session</h2>
+    <form id="boxing-form" onsubmit="submitBoxing(event)">
+      <div class="form-row">
+        <label style="font-size:.78rem;opacity:.6">Date:</label>
+        <input type="date" class="form-input form-input-md" id="box-date">
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Session</div>
+        <div class="form-row">
+          <select class="form-input form-input-md" id="box-type">
+            <option value="technique">Technique</option>
+            <option value="sparring">Sparring</option>
+            <option value="bag-work">Bag Work</option>
+            <option value="pads">Pad Work</option>
+            <option value="conditioning">Conditioning</option>
+            <option value="shadow">Shadow Boxing</option>
+          </select>
+          <input type="number" class="form-input form-input-sm" id="box-rounds" placeholder="Rounds" min="0">
+          <input type="number" class="form-input form-input-sm" id="box-duration" placeholder="min" min="0">
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title"><i class="fas fa-exclamation-triangle" style="color:var(--ember)"></i> Mistakes / Weaknesses</div>
+        <div id="boxing-mistake-rows">
+          <!-- Agent task: dynamic rows for mistake tracking -->
+          <!-- Each row: mistake description, category (defense/offense/footwork/conditioning) -->
+        </div>
+        <button type="button" class="btn btn-sm" onclick="addMistakeRow()"><i class="fas fa-plus"></i> Add Mistake</button>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title"><i class="fas fa-bullseye" style="color:var(--green)"></i> What to Work On</div>
+        <textarea class="form-input" id="box-work-on" placeholder="Specific drills, combos, or habits to focus on next session"></textarea>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">Session Notes</div>
+        <textarea class="form-input" id="box-notes" placeholder="What went well, cardio level, sparring partner feedback"></textarea>
+      </div>
+      <button type="submit" class="form-submit">LOG BOXING</button>
+    </form>
+  </div>
+</div>
+
+<script src="forge-shared.js"></script>
+<script src="data-layer.js"></script>
+<script>
+// ========================================================================
+// IRON SUBPAGE — Skeleton Script
+// Agent task: Implement all functions below
+// ========================================================================
+
+const MUSCLE_GROUPS = ['Chest','Back','Shoulders','Biceps','Triceps','Quads','Hamstrings','Glutes','Core','Calves'];
+
+// ==================== RENDERING ====================
+
+function renderIronStats() {
+  const el = document.getElementById('iron-stats');
+  const lvl = S.domains.iron;
+  document.getElementById('iron-level-badge').textContent = `LVL ${lvl} — ${DOMAIN_META.iron.titles[lvl]}`;
+
+  // Agent task: compute and render stat cards:
+  // - Sessions this week (gym + swim + boxing)
+  // - Total volume this week (sets x reps across all gym workouts)
+  // - Swimming distance this week
+  // - Boxing rounds this week
+  // - Current streak (consecutive days with any IRON activity)
+  // - PRs hit this month
+  const stats = computeIronStats();
+  el.innerHTML = [
+    { label:'Sessions This Week', value: stats.sessionsThisWeek },
+    { label:'Total Sets (Gym)', value: stats.totalSets },
+    { label:'Swim Distance (m)', value: stats.swimDistance },
+    { label:'Boxing Rounds', value: stats.boxingRounds },
+    { label:'Day Streak', value: stats.streak },
+    { label:'PRs This Month', value: stats.prs }
+  ].map(s => `<div class="stat-mini"><span class="sm-value">${s.value}</span><span class="sm-label">${s.label}</span></div>`).join('');
+}
+
+function computeIronStats() {
+  const now = new Date();
+  const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
+  const weekStr = weekStart.toISOString().slice(0,10);
+  const monthStr = now.toISOString().slice(0,7);
+
+  const gymThisWeek = S.iron.workouts.filter(w => w.date >= weekStr);
+  const swimThisWeek = S.iron.swimmingSessions.filter(s => s.date >= weekStr);
+  const boxThisWeek = S.iron.boxingSessions.filter(s => s.date >= weekStr);
+
+  const sessionsThisWeek = gymThisWeek.length + swimThisWeek.length + boxThisWeek.length;
+  const totalSets = gymThisWeek.reduce((a,w) => a + (w.exercises||[]).reduce((b,e) => b + (e.sets||0), 0), 0);
+  const swimDistance = swimThisWeek.reduce((a,s) => a + (s.distance||0), 0);
+  const boxingRounds = boxThisWeek.reduce((a,s) => a + (s.rounds||0), 0);
+
+  // Streak: consecutive days with any iron activity going backwards from today
+  const allDates = new Set([
+    ...S.iron.workouts.map(w => w.date),
+    ...S.iron.swimmingSessions.map(s => s.date),
+    ...S.iron.boxingSessions.map(s => s.date)
+  ]);
+  let streak = 0;
+  const d = new Date(now);
+  while (true) {
+    const ds = d.toISOString().slice(0,10);
+    if (allDates.has(ds)) { streak++; d.setDate(d.getDate()-1); }
+    else break;
+  }
+
+  // PRs this month: count workouts that have exercises with weight > all previous for same exercise name
+  let prs = 0;
+  const exerciseMaxBefore = {};
+  const sorted = [...S.iron.workouts].sort((a,b) => a.date.localeCompare(b.date));
+  for (const w of sorted) {
+    for (const ex of (w.exercises||[])) {
+      if (!ex.weight) continue;
+      const key = ex.name.toLowerCase().trim();
+      const prev = exerciseMaxBefore[key] || 0;
+      if (ex.weight > prev && w.date >= monthStr + '-01' && prev > 0) prs++;
+      exerciseMaxBefore[key] = Math.max(prev, ex.weight);
+    }
+  }
+
+  return { sessionsThisWeek, totalSets, swimDistance, boxingRounds, streak, prs };
+}
+
+function renderGymList() {
+  const el = document.getElementById('gym-list');
+  const workouts = [...S.iron.workouts].sort((a,b) => b.date.localeCompare(a.date));
+  if (!workouts.length) { el.innerHTML = '<div class="empty-state">No gym workouts logged yet.</div>'; return; }
+
+  // TODO: Agent implements — render each workout as an entry-card showing:
+  //   date, muscles hit (as tags), total sets, top exercises, energy level, notes
+  //   Delete button per entry
+  el.innerHTML = workouts.slice(0, 20).map(w => {
+    const muscles = [...new Set((w.exercises||[]).map(e => e.muscle))];
+    const totalSets = (w.exercises||[]).reduce((a,e) => a + (e.sets||0), 0);
+    const topExercises = (w.exercises||[]).slice(0,4).map(e => `${esc(e.name)} ${e.weight?e.weight+'kg':''}×${e.reps||0}`).join(', ');
+    return `<div class="entry-card">
+      <div class="entry-date">${w.date} <span class="entry-meta">${totalSets} sets · ${w.duration||'?'}min · Energy ${w.energy||'?'}/5</span>
+        <button class="btn btn-delete btn-sm" onclick="deleteGymWorkout('${w.id}')">&times;</button></div>
+      <div>${muscles.map(m => `<span class="tag tag-muscle">${esc(m)}</span>`).join('')}</div>
+      ${topExercises ? `<div style="margin-top:4px;font-size:.7rem;opacity:.5">${topExercises}</div>` : ''}
+      ${w.notes ? `<div style="margin-top:4px;opacity:.7;font-size:.75rem">${esc(w.notes)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderSwimmingList() {
+  const el = document.getElementById('swimming-list');
+  const sessions = [...S.iron.swimmingSessions].sort((a,b) => b.date.localeCompare(a.date));
+  if (!sessions.length) { el.innerHTML = '<div class="empty-state">No swimming sessions logged yet.</div>'; return; }
+
+  // TODO: Agent implements — render each swim session showing:
+  //   date, distance, duration, type, drills summary, technique notes
+  el.innerHTML = sessions.slice(0, 15).map(s => `<div class="entry-card">
+    <div class="entry-date">${s.date} <span class="entry-meta">${s.distance||0}m · ${s.duration||'?'}min · ${s.type||'mixed'}</span>
+      <button class="btn btn-delete btn-sm" onclick="deleteSwimSession('${s.id}')">&times;</button></div>
+    ${s.drills && s.drills.length ? `<div style="margin-top:4px;font-size:.7rem;opacity:.6">${s.drills.map(d => esc(d.name||d)).join(', ')}</div>` : ''}
+    ${s.notes ? `<div style="margin-top:4px;opacity:.7;font-size:.75rem">${esc(s.notes)}</div>` : ''}
+  </div>`).join('');
+}
+
+function renderBoxingList() {
+  const el = document.getElementById('boxing-list');
+  const sessions = [...S.iron.boxingSessions].sort((a,b) => b.date.localeCompare(a.date));
+  if (!sessions.length) { el.innerHTML = '<div class="empty-state">No boxing sessions logged yet.</div>'; return; }
+
+  el.innerHTML = sessions.slice(0, 15).map(s => `<div class="entry-card">
+    <div class="entry-date">${s.date} <span class="entry-meta">${s.type||'technique'} · ${s.rounds||0} rounds · ${s.duration||'?'}min</span>
+      <button class="btn btn-delete btn-sm" onclick="deleteBoxSession('${s.id}')">&times;</button></div>
+    ${s.mistakes && s.mistakes.length ? `<div style="margin-top:4px">${s.mistakes.map(m => `<span class="tag tag-weakness">${esc(typeof m === 'string' ? m : m.desc)}</span>`).join('')}</div>` : ''}
+    ${s.workOn ? `<div style="margin-top:4px;color:var(--green);font-size:.72rem"><i class="fas fa-bullseye"></i> ${esc(s.workOn)}</div>` : ''}
+    ${s.notes ? `<div style="margin-top:4px;opacity:.7;font-size:.75rem">${esc(s.notes)}</div>` : ''}
+  </div>`).join('');
+}
+
+function renderVolumeChart() {
+  const el = document.getElementById('volume-chart');
+  const now = new Date();
+  const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
+  const weekStr = weekStart.toISOString().slice(0,10);
+  const gymThisWeek = S.iron.workouts.filter(w => w.date >= weekStr);
+
+  const volume = {};
+  MUSCLE_GROUPS.forEach(m => volume[m] = 0);
+  gymThisWeek.forEach(w => (w.exercises||[]).forEach(e => {
+    if (volume.hasOwnProperty(e.muscle)) volume[e.muscle] += (e.sets||0);
+  }));
+
+  const maxSets = Math.max(...Object.values(volume), 1);
+  if (Object.values(volume).every(v => v === 0)) {
+    el.innerHTML = '<div class="empty-state">Log gym workouts to see volume breakdown.</div>';
+    return;
+  }
+
+  el.innerHTML = MUSCLE_GROUPS.map(m => {
+    const pct = (volume[m] / maxSets) * 100;
+    const color = volume[m] > 0 ? 'var(--green)' : 'rgba(240,230,211,.1)';
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <span style="width:90px;font-family:'Fira Code',monospace;font-size:.7rem;text-align:right;opacity:.7">${m}</span>
+      <div style="flex:1;height:18px;background:rgba(240,230,211,.05);border-radius:3px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:${color};border-radius:3px;transition:width .3s"></div>
+      </div>
+      <span style="width:30px;font-family:'Fira Code',monospace;font-size:.7rem;color:var(--green)">${volume[m]}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderPRLog() {
+  const el = document.getElementById('pr-log');
+  const prs = {}; // { exerciseName: { weight, reps, date } }
+
+  const sorted = [...S.iron.workouts].sort((a,b) => a.date.localeCompare(b.date));
+  for (const w of sorted) {
+    for (const ex of (w.exercises||[])) {
+      if (!ex.weight) continue;
+      const key = ex.name.trim();
+      const keyLower = key.toLowerCase();
+      if (!prs[keyLower] || ex.weight > prs[keyLower].weight) {
+        prs[keyLower] = { name: key, weight: ex.weight, reps: ex.reps||0, date: w.date, muscle: ex.muscle||'' };
+      }
+    }
+  }
+
+  const entries = Object.values(prs).sort((a,b) => b.weight - a.weight);
+  if (!entries.length) {
+    el.innerHTML = '<div class="empty-state">Log workouts with weights to track PRs.</div>';
+    return;
+  }
+
+  el.innerHTML = `<table class="data-table">
+    <thead><tr><th>Exercise</th><th>Muscle</th><th>Best Weight</th><th>Reps</th><th>Date</th></tr></thead>
+    <tbody>${entries.map(p => `<tr>
+      <td>${esc(p.name)}</td>
+      <td><span class="tag tag-muscle">${esc(p.muscle)}</span></td>
+      <td style="color:var(--gold);font-weight:600">${p.weight} kg</td>
+      <td>${p.reps}</td>
+      <td style="opacity:.6">${p.date}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ==================== DELETE ACTIONS ====================
+
+async function deleteGymWorkout(id) {
+  S.iron.workouts = S.iron.workouts.filter(w => w.id !== id);
+  await dbDelete('workouts',id); cacheState(); renderAll();
+}
+async function deleteSwimSession(id) {
+  S.iron.swimmingSessions = S.iron.swimmingSessions.filter(s => s.id !== id);
+  await dbDelete('swimming_sessions',id); cacheState(); renderAll();
+}
+async function deleteBoxSession(id) {
+  S.iron.boxingSessions = S.iron.boxingSessions.filter(s => s.id !== id);
+  await dbDelete('boxing_sessions',id); cacheState(); renderAll();
+}
+
+// ==================== FORM DYNAMICS ====================
+
+function addExerciseRow() {
+  const container = document.getElementById('exercise-rows');
+  const row = document.createElement('div');
+  row.className = 'form-row';
+  row.innerHTML = `
+    <input type="text" class="form-input form-input-lg" placeholder="Exercise name" data-field="name">
+    <select class="form-input form-input-md" data-field="muscle">
+      ${MUSCLE_GROUPS.map(m => `<option value="${m}">${m}</option>`).join('')}
+    </select>
+    <input type="number" class="form-input form-input-sm" placeholder="Sets" min="0" data-field="sets">
+    <input type="number" class="form-input form-input-sm" placeholder="Reps" min="0" data-field="reps">
+    <input type="number" class="form-input form-input-sm" placeholder="kg" min="0" step="0.5" data-field="weight">
+    <button type="button" class="btn btn-delete btn-sm" onclick="this.parentElement.remove()">&times;</button>
+  `;
+  container.appendChild(row);
+}
+
+function addSwimDrillRow() {
+  const container = document.getElementById('swim-drill-rows');
+  const row = document.createElement('div');
+  row.className = 'form-row';
+  row.innerHTML = `
+    <input type="text" class="form-input form-input-lg" placeholder="Drill/set name" data-field="name">
+    <input type="number" class="form-input form-input-sm" placeholder="meters" min="0" data-field="distance">
+    <input type="text" class="form-input form-input-sm" placeholder="rest" data-field="rest">
+    <button type="button" class="btn btn-delete btn-sm" onclick="this.parentElement.remove()">&times;</button>
+  `;
+  container.appendChild(row);
+}
+
+function addMistakeRow() {
+  const container = document.getElementById('boxing-mistake-rows');
+  const row = document.createElement('div');
+  row.className = 'form-row';
+  row.innerHTML = `
+    <input type="text" class="form-input" placeholder="Mistake / weakness" data-field="desc">
+    <select class="form-input form-input-md" data-field="category">
+      <option value="defense">Defense</option>
+      <option value="offense">Offense</option>
+      <option value="footwork">Footwork</option>
+      <option value="conditioning">Conditioning</option>
+      <option value="other">Other</option>
+    </select>
+    <button type="button" class="btn btn-delete btn-sm" onclick="this.parentElement.remove()">&times;</button>
+  `;
+  container.appendChild(row);
+}
+
+// ==================== FORM SUBMISSIONS ====================
+
+async function submitGymWorkout(e) {
+  e.preventDefault();
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const exercises = [];
+  document.querySelectorAll('#exercise-rows .form-row').forEach(row => {
+    const name = row.querySelector('[data-field="name"]')?.value;
+    if (!name) return;
+    exercises.push({
+      name,
+      muscle: row.querySelector('[data-field="muscle"]')?.value || '',
+      sets: parseInt(row.querySelector('[data-field="sets"]')?.value) || 0,
+      reps: parseInt(row.querySelector('[data-field="reps"]')?.value) || 0,
+      weight: parseFloat(row.querySelector('[data-field="weight"]')?.value) || 0
+    });
+  });
+
+  const workout = {
+    id: uid(),
+    date: document.getElementById('gym-date').value || today(),
+    exercises,
+    energy: parseInt(document.getElementById('gym-energy').value) || 3,
+    duration: parseInt(document.getElementById('gym-duration').value) || 0,
+    notes: document.getElementById('gym-notes').value
+  };
+  S.iron.workouts.push(workout);
+  await dbInsert('workouts',{user_id:userId,...workout});
+
+  cacheState(); closeModal('gym'); renderAll();
+  document.getElementById('gym-form').reset();
+  document.getElementById('exercise-rows').innerHTML = '';
+}
+
+async function submitSwimming(e) {
+  e.preventDefault();
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const drills = [];
+  document.querySelectorAll('#swim-drill-rows .form-row').forEach(row => {
+    const name = row.querySelector('[data-field="name"]')?.value;
+    if (!name) return;
+    drills.push({
+      name,
+      distance: parseInt(row.querySelector('[data-field="distance"]')?.value) || 0,
+      rest: row.querySelector('[data-field="rest"]')?.value || ''
+    });
+  });
+
+  const swim = {
+    id: uid(),
+    date: document.getElementById('swim-date').value || today(),
+    distance: parseInt(document.getElementById('swim-distance').value) || 0,
+    duration: parseInt(document.getElementById('swim-duration').value) || 0,
+    type: document.getElementById('swim-type').value,
+    drills,
+    notes: document.getElementById('swim-notes').value
+  };
+  S.iron.swimmingSessions.push(swim);
+  await dbInsert('swimming_sessions',{user_id:userId,...swim});
+
+  cacheState(); closeModal('swimming'); renderAll();
+  document.getElementById('swimming-form').reset();
+  document.getElementById('swim-drill-rows').innerHTML = '';
+}
+
+async function submitBoxing(e) {
+  e.preventDefault();
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const mistakes = [];
+  document.querySelectorAll('#boxing-mistake-rows .form-row').forEach(row => {
+    const desc = row.querySelector('[data-field="desc"]')?.value;
+    if (!desc) return;
+    mistakes.push({
+      desc,
+      category: row.querySelector('[data-field="category"]')?.value || 'other'
+    });
+  });
+
+  const box = {
+    id: uid(),
+    date: document.getElementById('box-date').value || today(),
+    type: document.getElementById('box-type').value,
+    rounds: parseInt(document.getElementById('box-rounds').value) || 0,
+    duration: parseInt(document.getElementById('box-duration').value) || 0,
+    mistakes,
+    workOn: document.getElementById('box-work-on').value,
+    notes: document.getElementById('box-notes').value
+  };
+  S.iron.boxingSessions.push(box);
+  await dbInsert('boxing_sessions',{user_id:userId,...box});
+
+  cacheState(); closeModal('boxing'); renderAll();
+  document.getElementById('boxing-form').reset();
+  document.getElementById('boxing-mistake-rows').innerHTML = '';
+}
+
+// ==================== MODAL ====================
+function openModal(name) {
+  document.getElementById('modal-'+name).classList.add('open');
+  if (name === 'gym') { document.getElementById('gym-date').value = today(); addExerciseRow(); }
+  if (name === 'swimming') { document.getElementById('swim-date').value = today(); }
+  if (name === 'boxing') { document.getElementById('box-date').value = today(); }
+}
+function closeModal(name) { document.getElementById('modal-'+name).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+
+// ==================== INIT ====================
+function renderAll() {
+  renderIronStats();
+  renderGymList();
+  renderSwimmingList();
+  renderBoxingList();
+  renderVolumeChart();
+  renderPRLog();
+}
+initForge(() => renderAll());
+</script>
+<a href="quick-input.html" class="qi-fab" title="Quick Input"><i class="fas fa-microphone"></i></a>
+</body>
+</html>

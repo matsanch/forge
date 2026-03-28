@@ -1,0 +1,40 @@
+{
+  "domains": {
+    "iron": 0,
+    "anvil": 0,
+    "vault": 0,
+    "guild": 0,
+    "library": 0
+  },
+  "dailyLogs": [],
+  "quests": [],
+  "expenses": [],
+  "income": [],
+  "contacts": [],
+  "weeklyReviews": [],
+  "truth": "Click here to set your Uncomfortable Truth.",
+  "startDate": "2026-03-08",
+  "iron": {
+    "workouts": [],
+    "swimmingSessions": [],
+    "boxingSessions": []
+  },
+  "anvil": {
+    "tasks": [],
+    "outreachLog": []
+  },
+  "vault": {
+    "budgetGoals": {
+      "monthlyTarget": 0,
+      "savingsTarget": 10
+    }
+  },
+  "guild": {
+    "interactions": []
+  },
+  "library": {
+    "papers": [],
+    "courses": [],
+    "deepWorkSessions": []
+  }
+}

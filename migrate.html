@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE FORGE — Migrate Data</title>
+<link rel="stylesheet" href="forge-shared.css">
+<style>
+  body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--deep-bg); }
+  .migrate-box { background:rgba(26,26,46,.9); border:2px solid var(--gold); border-radius:8px; padding:40px; max-width:520px; width:100%; }
+  .migrate-box h1 { font-family:'Cinzel',serif; color:var(--gold); font-size:1.8rem; letter-spacing:.15em; margin-bottom:8px; text-align:center; }
+  .migrate-box .sub { font-family:'Fira Code',monospace; color:var(--gold); opacity:.6; font-size:.75rem; margin-bottom:24px; text-align:center; }
+  .section { margin-bottom:20px; }
+  .section label { display:block; color:var(--bone); font-family:'Fira Code',monospace; font-size:.8rem; margin-bottom:8px; }
+  .btn { display:block; width:100%; padding:12px; border:none; border-radius:4px; color:var(--bone); font-family:'Cinzel',serif; font-size:1rem; letter-spacing:.1em; cursor:pointer; margin-bottom:10px; }
+  .btn-primary { background:var(--ember); }
+  .btn-secondary { background:var(--stone); border:1px solid var(--gold); }
+  .btn:hover { opacity:.85; }
+  .btn:disabled { opacity:.4; cursor:not-allowed; }
+  input[type="file"] { display:none; }
+  .file-label { display:block; padding:10px; background:var(--stone); border:1px solid var(--gold); border-radius:4px; color:var(--bone); font-family:'Fira Code',monospace; font-size:.85rem; text-align:center; cursor:pointer; margin-bottom:10px; }
+  .file-label:hover { opacity:.85; }
+  #log { background:var(--stone); border:1px solid rgba(255,215,0,.2); border-radius:4px; padding:12px; max-height:300px; overflow-y:auto; font-family:'Fira Code',monospace; font-size:.75rem; color:var(--bone); line-height:1.6; display:none; }
+  .log-ok { color:#4ade80; }
+  .log-err { color:var(--ember); }
+  .log-info { color:var(--gold); }
+  .progress { margin:12px 0; }
+  .progress-bar { height:6px; background:var(--stone); border-radius:3px; overflow:hidden; }
+  .progress-fill { height:100%; background:var(--ember); width:0%; transition:width .3s; }
+  .progress-text { font-family:'Fira Code',monospace; font-size:.7rem; color:var(--bone); opacity:.7; margin-top:4px; text-align:center; }
+  .source-info { font-family:'Fira Code',monospace; font-size:.75rem; color:var(--gold); opacity:.8; padding:8px; background:rgba(255,215,0,.05); border-radius:4px; margin-bottom:16px; text-align:center; display:none; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+</head>
+<body>
+<div class="migrate-box">
+  <h1>DATA MIGRATION</h1>
+  <div class="sub">ONE-TIME IMPORT INTO SUPABASE</div>
+
+  <div class="section">
+    <label>1. Choose data source:</label>
+    <button class="btn btn-secondary" id="btn-localstorage" onclick="loadFromLocalStorage()">Load from localStorage</button>
+    <label class="file-label" for="file-input">Upload JSON file</label>
+    <input type="file" id="file-input" accept=".json" onchange="loadFromFile(event)">
+  </div>
+
+  <div class="source-info" id="source-info"></div>
+
+  <div class="section">
+    <label>2. Import into Supabase:</label>
+    <button class="btn btn-primary" id="btn-migrate" onclick="runMigration()" disabled>MIGRATE</button>
+  </div>
+
+  <div class="progress" id="progress" style="display:none">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="progress-text" id="progress-text"></div>
+  </div>
+
+  <div id="log"></div>
+</div>
+
+<script>
+let stateData = null;
+
+// ==================== Logging ====================
+const logEl = document.getElementById('log');
+function log(msg, cls) {
+  logEl.style.display = 'block';
+  logEl.innerHTML += `<div class="${cls || ''}">${msg}</div>`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function setProgress(pct, text) {
+  const el = document.getElementById('progress');
+  el.style.display = 'block';
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = text;
+}
+
+// ==================== Data Loading ====================
+function showSourceInfo(state) {
+  const info = document.getElementById('source-info');
+  const logs = (state.dailyLogs || []).length;
+  const expenses = (state.expenses || []).length;
+  const workouts = ((state.iron && state.iron.workouts) || []).length;
+  info.textContent = `Loaded: ${logs} daily logs, ${expenses} expenses, ${workouts} workouts, start: ${state.startDate || 'N/A'}`;
+  info.style.display = 'block';
+  document.getElementById('btn-migrate').disabled = false;
+}
+
+function loadFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem('forge_state');
+    if (!raw) { log('No forge_state found in localStorage', 'log-err'); return; }
+    stateData = JSON.parse(raw);
+    log('Loaded state from localStorage', 'log-ok');
+    showSourceInfo(stateData);
+  } catch (e) {
+    log('Error reading localStorage: ' + e.message, 'log-err');
+  }
+}
+
+function loadFromFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      stateData = JSON.parse(ev.target.result);
+      log('Loaded state from file: ' + file.name, 'log-ok');
+      showSourceInfo(stateData);
+    } catch (err) {
+      log('Invalid JSON file: ' + err.message, 'log-err');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ==================== Migration ====================
+const COLLECTION_MAP = [
+  { key: 'dailyLogs',              table: 'daily_logs' },
+  { key: 'quests',                 table: 'quests' },
+  { key: 'expenses',               table: 'expenses' },
+  { key: 'income',                 table: 'income' },
+  { key: 'contacts',               table: 'contacts' },
+  { key: 'iron.workouts',          table: 'workouts' },
+  { key: 'iron.swimmingSessions',  table: 'swimming_sessions' },
+  { key: 'iron.boxingSessions',    table: 'boxing_sessions' },
+  { key: 'anvil.tasks',            table: 'anvil_tasks' },
+  { key: 'anvil.outreachLog',      table: 'outreach_log' },
+  { key: 'guild.interactions',     table: 'guild_interactions' },
+  { key: 'library.deepWorkSessions', table: 'deep_work_sessions' },
+  { key: 'library.papers',         table: 'papers' },
+  { key: 'library.courses',        table: 'courses' },
+  { key: 'weeklyReviews',          table: 'weekly_reviews' },
+];
+
+function getNestedValue(obj, path) {
+  return path.split('.').reduce((o, k) => (o && o[k] != null) ? o[k] : [], obj);
+}
+
+function toSnake(obj) {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return obj;
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v]) => [k.replace(/[A-Z]/g, l => '_' + l.toLowerCase()), v])
+  );
+}
+
+async function runMigration() {
+  if (!stateData) { log('No data loaded', 'log-err'); return; }
+
+  const btn = document.getElementById('btn-migrate');
+  btn.disabled = true;
+  btn.textContent = 'MIGRATING...';
+
+  // 1. Authenticate
+  log('Checking authentication...', 'log-info');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    log('Not authenticated. Please login first.', 'log-err');
+    btn.disabled = false;
+    btn.textContent = 'MIGRATE';
+    return;
+  }
+  const userId = session.user.id;
+  log('Authenticated as: ' + session.user.email, 'log-ok');
+
+  let totalOk = 0;
+  let totalErr = 0;
+  let step = 0;
+  const totalSteps = COLLECTION_MAP.length + 1; // +1 for profile
+
+  // 2. Upsert user_profile
+  step++;
+  setProgress(Math.round((step / totalSteps) * 100), `Migrating user profile (${step}/${totalSteps})`);
+  log('Inserting user_profile...', 'log-info');
+  const profile = {
+    user_id: userId,
+    domains: stateData.domains || null,
+    truth: stateData.truth || null,
+    start_date: stateData.startDate || null,
+    budget_goals: (stateData.vault && stateData.vault.budgetGoals) || null,
+    updated_at: new Date().toISOString(),
+  };
+  const { error: profileErr } = await supabase.from('user_profile').upsert(profile, { onConflict: 'user_id' });
+  if (profileErr) {
+    log('user_profile error: ' + profileErr.message, 'log-err');
+    totalErr++;
+  } else {
+    log('user_profile: OK', 'log-ok');
+    totalOk++;
+  }
+
+  // 3. Batch insert all collections
+  for (const { key, table } of COLLECTION_MAP) {
+    step++;
+    const rows = getNestedValue(stateData, key);
+    setProgress(Math.round((step / totalSteps) * 100), `Migrating ${table} (${step}/${totalSteps})`);
+
+    if (!rows || !rows.length) {
+      log(`${table}: 0 rows (skipped)`, 'log-info');
+      continue;
+    }
+
+    const prepared = rows.map(row => {
+      const snaked = toSnake(row);
+      snaked.user_id = userId;
+      return snaked;
+    });
+
+    log(`${table}: inserting ${prepared.length} rows...`, 'log-info');
+    const { error } = await supabase.from(table).upsert(prepared, { onConflict: 'id' });
+    if (error) {
+      log(`${table}: ERROR \u2014 ${error.message}`, 'log-err');
+      totalErr++;
+    } else {
+      log(`${table}: ${prepared.length} rows OK`, 'log-ok');
+      totalOk++;
+    }
+  }
+
+  // 4. Done
+  setProgress(100, 'Migration complete');
+  log('', '');
+  log(`\u2550\u2550\u2550 Migration complete: ${totalOk} succeeded, ${totalErr} failed \u2550\u2550\u2550`, totalErr ? 'log-err' : 'log-ok');
+
+  btn.textContent = totalErr ? 'RETRY MIGRATION' : 'DONE';
+  btn.disabled = !totalErr;
+}
+
+// Redirect if not logged in
+supabase.auth.getSession().then(({ data: { session } }) => {
+  if (!session) {
+    log('Not logged in. Redirecting to login...', 'log-err');
+    setTimeout(() => window.location.href = 'login.html', 1500);
+  }
+});
+</script>
+</body>
+</html>

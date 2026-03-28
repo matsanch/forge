@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE FORGE — ANVIL</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="forge-shared.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<link rel="manifest" href="manifest.json">
+</head>
+<body>
+<div id="forge-loading" style="position:fixed;inset:0;background:#0f0f1a;display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="font-family:Cinzel,serif;color:#d4a844;font-size:1.5rem;letter-spacing:.3em">FORGING...</div>
+</div>
+<div class="container">
+
+  <div class="sub-header">
+    <a href="index.html" class="back-link"><i class="fas fa-chevron-left"></i> FORGE</a>
+    <h1><i class="fas fa-hammer" style="color:var(--ember)"></i> ANVIL DOMAIN <span id="sync-status" style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-left:8px" title="Online"></span></h1>
+    <span class="domain-badge" id="anvil-level-badge">LVL 0 — Unforged</span>
+  </div>
+
+  <!-- STATS OVERVIEW -->
+  <div class="grid-3" id="anvil-stats" style="margin-bottom:20px">
+    <!-- Agent task: compute — tasks completed this week, outreach sent total,
+         responses received, NeurGait commits, GCP modules done, thesis leads active -->
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="openModal('task')"><i class="fas fa-check-circle"></i> Log Task</button>
+    <button class="btn" onclick="openModal('outreach')"><i class="fas fa-envelope"></i> Log Outreach</button>
+  </div>
+
+  <div class="grid-2">
+    <!-- TASK LOG -->
+    <div class="panel">
+      <div class="panel-title"><i class="fas fa-list-check"></i> TASK LOG</div>
+      <div id="task-list"></div>
+      <!-- Agent task: render task entries showing:
+           date, project (NeurGait/Internship/GCP/Thesis/Other), description,
+           hours spent, status (done/in-progress/blocked), blockers -->
+    </div>
+
+    <!-- OUTREACH TRACKER -->
+    <div class="panel">
+      <div class="panel-title"><i class="fas fa-envelope"></i> OUTREACH LOG</div>
+      <div id="outreach-list"></div>
+      <!-- Agent task: render outreach entries showing:
+           date, target (name + org), method (email/LinkedIn/in-person),
+           status (sent/replied/meeting-scheduled/no-response), follow-up date -->
+    </div>
+  </div>
+
+  <!-- THESIS PIPELINE -->
+  <div class="panel">
+    <div class="panel-title"><i class="fas fa-flask"></i> THESIS PIPELINE</div>
+    <div id="thesis-pipeline">
+      <!-- Agent task: Kanban-style columns or table showing thesis targets:
+           Identified → Contacted → Responded → Meeting Held → Warm Lead
+           Pull from S.contacts filtered by type==='thesis-target' -->
+    </div>
+  </div>
+
+  <!-- PROJECT TRACKER -->
+  <div class="panel">
+    <div class="panel-title"><i class="fas fa-code-branch"></i> PROJECT STATUS</div>
+    <div id="project-status">
+      <!-- Agent task: summary cards for each project:
+           - NeurGait: features shipped, last commit, next milestone
+           - GCP Training: modules completed / total, certification target date
+           - Internship Prep: tasks done, days until start (March 20) -->
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-task">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('task')">&times;</button>
+    <h2><i class="fas fa-check-circle"></i> Log Task</h2>
+    <form id="task-form" onsubmit="submitTask(event)">
+      <div class="form-row">
+        <input type="date" class="form-input form-input-md" id="task-date">
+        <select class="form-input form-input-md" id="task-project">
+          <option value="neurgait">NeurGait</option>
+          <option value="internship">Internship</option>
+          <option value="gcp">GCP Training</option>
+          <option value="thesis">Thesis Research</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-row"><input type="text" class="form-input" id="task-desc" placeholder="What did you work on?" required></div>
+      <div class="form-row">
+        <input type="number" class="form-input form-input-sm" id="task-hours" placeholder="Hours" min="0" step="0.5">
+        <select class="form-input form-input-md" id="task-status">
+          <option value="done">Done</option>
+          <option value="in-progress">In Progress</option>
+          <option value="blocked">Blocked</option>
+        </select>
+      </div>
+      <textarea class="form-input" id="task-blockers" placeholder="Blockers or next steps (optional)"></textarea>
+      <button type="submit" class="form-submit">LOG TASK</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-outreach">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('outreach')">&times;</button>
+    <h2><i class="fas fa-envelope"></i> Log Outreach</h2>
+    <form id="outreach-form" onsubmit="submitOutreach(event)">
+      <div class="form-row">
+        <input type="date" class="form-input form-input-md" id="or-date">
+        <select class="form-input form-input-md" id="or-method">
+          <option value="email">Email</option>
+          <option value="linkedin">LinkedIn</option>
+          <option value="in-person">In Person</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <input type="text" class="form-input" id="or-target" placeholder="Person name" required>
+        <input type="text" class="form-input" id="or-org" placeholder="Organization">
+      </div>
+      <div class="form-row">
+        <select class="form-input form-input-md" id="or-status">
+          <option value="sent">Sent</option>
+          <option value="replied">Replied</option>
+          <option value="meeting-scheduled">Meeting Scheduled</option>
+          <option value="no-response">No Response</option>
+        </select>
+        <input type="date" class="form-input form-input-md" id="or-followup" placeholder="Follow-up date">
+      </div>
+      <textarea class="form-input" id="or-notes" placeholder="What you said, context, template used"></textarea>
+      <button type="submit" class="form-submit">LOG OUTREACH</button>
+    </form>
+  </div>
+</div>
+
+<script src="forge-shared.js"></script>
+<script src="data-layer.js"></script>
+<script>
+// ========================================================================
+// ANVIL SUBPAGE — Skeleton Script
+// Agent task: Implement rendering and computations
+// ========================================================================
+
+function renderAll() {
+  const lvl = S.domains.anvil;
+  document.getElementById('anvil-level-badge').textContent = `LVL ${lvl} — ${DOMAIN_META.anvil.titles[lvl]}`;
+
+  renderAnvilStats();
+  renderTaskList();
+  renderOutreachList();
+  renderThesisPipeline();
+  renderProjectStatus();
+}
+
+function renderAnvilStats() {
+  const el = document.getElementById('anvil-stats');
+  // TODO: Agent computes from S.anvil.tasks, S.anvil.outreachLog, S.contacts
+  el.innerHTML = [
+    { label:'Tasks This Week', value: 0 },
+    { label:'Outreach Sent', value: S.anvil.outreachLog.length },
+    { label:'Responses', value: 0 },
+    { label:'NeurGait Tasks', value: S.anvil.tasks.filter(t=>t.project==='neurgait').length },
+    { label:'GCP Modules', value: 0 },
+    { label:'Days to Internship', value: Math.max(0, Math.ceil((new Date('2026-03-20')-new Date())/86400000)) }
+  ].map(s => `<div class="stat-mini"><span class="sm-value">${s.value}</span><span class="sm-label">${s.label}</span></div>`).join('');
+}
+
+function renderTaskList() {
+  const el = document.getElementById('task-list');
+  if (!S.anvil.tasks.length) { el.innerHTML = '<div class="empty-state">No tasks logged yet.</div>'; return; }
+  // TODO: Agent renders task cards
+  el.innerHTML = [...S.anvil.tasks].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20).map(t =>
+    `<div class="entry-card">
+      <div class="entry-date">${t.date} <span class="entry-meta">${t.project} · ${t.hours||0}h · ${t.status}</span></div>
+      <div style="font-size:.8rem">${esc(t.desc)}</div>
+      ${t.blockers ? `<div style="margin-top:4px;color:var(--ember);font-size:.72rem">${esc(t.blockers)}</div>` : ''}
+    </div>`
+  ).join('');
+}
+
+function renderOutreachList() {
+  const el = document.getElementById('outreach-list');
+  if (!S.anvil.outreachLog.length) { el.innerHTML = '<div class="empty-state">No outreach logged. Send your first email.</div>'; return; }
+  // TODO: Agent renders outreach cards with status colors
+  el.innerHTML = [...S.anvil.outreachLog].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20).map(o => {
+    const sc = {sent:'var(--gold)',replied:'var(--green)','meeting-scheduled':'var(--green)','no-response':'var(--ember)'};
+    return `<div class="entry-card">
+      <div class="entry-date">${o.date} <span class="entry-meta" style="color:${sc[o.status]||'var(--bone)'}">${o.status}</span></div>
+      <div style="font-size:.8rem"><strong>${esc(o.target)}</strong> · ${esc(o.org||'')} · ${o.method}</div>
+      ${o.notes ? `<div style="margin-top:4px;opacity:.7;font-size:.72rem">${esc(o.notes)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderThesisPipeline() {
+  const el = document.getElementById('thesis-pipeline');
+  const targets = S.contacts.filter(c => c.type === 'thesis-target');
+  if (!targets.length) { el.innerHTML = '<div class="empty-state">No thesis targets yet. Add contacts on the main dashboard.</div>'; return; }
+  // TODO: Agent renders Kanban columns
+  const cols = ['identified','contacted','responded','meeting-held','warm'];
+  el.innerHTML = '<div style="display:flex;gap:12px;overflow-x:auto">' + cols.map(col => {
+    const items = targets.filter(t => t.status === col);
+    return `<div style="flex:1;min-width:150px"><div style="font-family:'Cinzel',serif;font-size:.72rem;color:var(--gold);margin-bottom:8px;text-transform:uppercase">${col}</div>${items.length ? items.map(t => `<div class="entry-card" style="padding:8px"><strong style="font-size:.75rem">${esc(t.name)}</strong><div class="entry-meta">${esc(t.org||'')}</div></div>`).join('') : '<div class="entry-meta" style="padding:8px;opacity:.3">—</div>'}</div>`;
+  }).join('') + '</div>';
+}
+
+function renderProjectStatus() {
+  const el = document.getElementById('project-status');
+  // TODO: Agent computes project summaries from S.anvil.tasks
+  el.innerHTML = '<div class="empty-state">Log tasks to see project status breakdown.</div>';
+}
+
+// ==================== SUBMISSIONS ====================
+async function submitTask(e) {
+  e.preventDefault();
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const task = {
+    id: uid(),
+    date: document.getElementById('task-date').value || today(),
+    project: document.getElementById('task-project').value,
+    desc: document.getElementById('task-desc').value,
+    hours: parseFloat(document.getElementById('task-hours').value) || 0,
+    status: document.getElementById('task-status').value,
+    blockers: document.getElementById('task-blockers').value
+  };
+  S.anvil.tasks.push(task);
+  await dbInsert('anvil_tasks',{user_id:userId,...task});
+  cacheState(); closeModal('task'); renderAll();
+  document.getElementById('task-form').reset();
+}
+
+async function submitOutreach(e) {
+  e.preventDefault();
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const outreach = {
+    id: uid(),
+    date: document.getElementById('or-date').value || today(),
+    method: document.getElementById('or-method').value,
+    target: document.getElementById('or-target').value,
+    org: document.getElementById('or-org').value,
+    status: document.getElementById('or-status').value,
+    followup: document.getElementById('or-followup').value,
+    notes: document.getElementById('or-notes').value
+  };
+  S.anvil.outreachLog.push(outreach);
+  await dbInsert('outreach_log',{user_id:userId,...outreach});
+  cacheState(); closeModal('outreach'); renderAll();
+  document.getElementById('outreach-form').reset();
+}
+
+function openModal(name) {
+  document.getElementById('modal-'+name).classList.add('open');
+  if (name === 'task') document.getElementById('task-date').value = today();
+  if (name === 'outreach') document.getElementById('or-date').value = today();
+}
+function closeModal(name) { document.getElementById('modal-'+name).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+
+initForge(() => renderAll());
+</script>
+<a href="quick-input.html" class="qi-fab" title="Quick Input"><i class="fas fa-microphone"></i></a>
+</body>
+</html>

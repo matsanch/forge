@@ -1,0 +1,575 @@
+{
+  "domains": {
+    "iron": 1,
+    "anvil": 0,
+    "vault": 1,
+    "guild": 0,
+    "library": 0
+  },
+  "dailyLogs": [
+    {
+      "date": "2026-03-08",
+      "gym": false,
+      "boxing": false,
+      "swimming": false,
+      "rest": true,
+      "overload": false,
+      "sleep": 4,
+      "injury": "",
+      "internship": false,
+      "neurgait": false,
+      "outreachCount": 0,
+      "gcp": false,
+      "finLiteracy": false,
+      "spent": 2.9,
+      "guildOutreach": false,
+      "relationship": false,
+      "newContact": "",
+      "deepWork": 0,
+      "paper": "",
+      "avoided": ""
+    },
+    {
+      "date": "2026-03-09",
+      "gym": true,
+      "boxing": false,
+      "swimming": false,
+      "rest": false,
+      "overload": true,
+      "sleep": 3,
+      "injury": "",
+      "internship": false,
+      "neurgait": false,
+      "outreachCount": 0,
+      "gcp": false,
+      "finLiteracy": false,
+      "spent": 27.8,
+      "guildOutreach": false,
+      "relationship": true,
+      "newContact": "",
+      "deepWork": 0,
+      "paper": "",
+      "avoided": "I avoided the neurgait work, due to lack of direction. No reading either. "
+    },
+    {
+      "date": "2026-03-10",
+      "gym": true,
+      "boxing": true,
+      "swimming": false,
+      "rest": false,
+      "overload": false,
+      "sleep": 5,
+      "injury": "",
+      "internship": false,
+      "neurgait": false,
+      "outreachCount": 0,
+      "gcp": false,
+      "finLiteracy": false,
+      "spent": 30.45,
+      "guildOutreach": false,
+      "relationship": false,
+      "newContact": "",
+      "deepWork": 0,
+      "paper": "",
+      "avoided": "Deep work. Of any kind. "
+    },
+    {
+      "date": "2026-03-11",
+      "gym": false,
+      "boxing": false,
+      "swimming": true,
+      "rest": false,
+      "overload": false,
+      "sleep": 2,
+      "injury": "",
+      "internship": false,
+      "neurgait": false,
+      "outreachCount": 0,
+      "gcp": false,
+      "finLiteracy": false,
+      "spent": 28.55,
+      "guildOutreach": false,
+      "relationship": false,
+      "newContact": "",
+      "deepWork": 0,
+      "paper": "",
+      "avoided": "Deep Work. Too exhausted after delivery hours. "
+    }
+  ],
+  "quests": [
+    {
+      "id": "mmiuvy7ku0w28j",
+      "name": "Gym",
+      "domain": "iron",
+      "desc": "Lower body ",
+      "deadline": "2026-03-16",
+      "difficulty": "daily",
+      "xp": 10,
+      "boss": false,
+      "status": "completed",
+      "createdAt": "2026-03-09",
+      "failCount": 0,
+      "completedAt": "2026-03-09"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "mmixl1rbi10h47",
+      "date": "2026-03-02",
+      "amount": 11.1,
+      "category": "transport",
+      "note": ""
+    },
+    {
+      "id": "mmixlfzhq21mi0",
+      "date": "2026-03-02",
+      "amount": 57.45,
+      "category": "gear",
+      "note": "aux lights"
+    },
+    {
+      "id": "mmixmewipxq8ae",
+      "date": "2026-03-09",
+      "amount": 8.5,
+      "category": "food",
+      "note": "lidl"
+    },
+    {
+      "id": "mmixn3pv2oa4ia",
+      "date": "2026-03-09",
+      "amount": 9.85,
+      "category": "food",
+      "note": ""
+    },
+    {
+      "id": "mmixnnpzarru7h",
+      "date": "2026-03-04",
+      "amount": 6,
+      "category": "other",
+      "note": "Swimming vaudoise arena"
+    },
+    {
+      "id": "mmixp6chuqbkbf",
+      "date": "2026-03-04",
+      "amount": 58.3,
+      "category": "food",
+      "note": "denner + electrolytes + themeal"
+    },
+    {
+      "id": "mmixq12kiqhkpm",
+      "date": "2026-03-05",
+      "amount": 39.05,
+      "category": "food",
+      "note": "denner"
+    },
+    {
+      "id": "mmixqgmemxunl9",
+      "date": "2026-03-05",
+      "amount": 109.9,
+      "category": "gear",
+      "note": "Boxing gloves"
+    },
+    {
+      "id": "mmixrh9pfue0hs",
+      "date": "2026-03-06",
+      "amount": 41.5,
+      "category": "food",
+      "note": "Aligro"
+    },
+    {
+      "id": "mmixszezpo84xq",
+      "date": "2026-03-06",
+      "amount": 6.5,
+      "category": "food",
+      "note": "monster elevate"
+    },
+    {
+      "id": "mmixtd6owbz7jm",
+      "date": "2026-03-09",
+      "amount": 15.98,
+      "category": "food",
+      "note": "migrol"
+    },
+    {
+      "id": "mmixv21c8b6g8q",
+      "date": "2026-03-07",
+      "amount": 6.3,
+      "category": "food",
+      "note": "station service"
+    },
+    {
+      "id": "mmixvkwgdc2nap",
+      "date": "2026-03-07",
+      "amount": 6,
+      "category": "other",
+      "note": "Malley natation"
+    },
+    {
+      "id": "mmixw2sp8s8sa5",
+      "date": "2026-03-09",
+      "amount": 27.8,
+      "category": "food",
+      "note": "migros"
+    },
+    {
+      "id": "mmixy6pzmhk4ob",
+      "date": "2026-03-05",
+      "amount": 65,
+      "category": "other",
+      "note": "Revolut"
+    },
+    {
+      "id": "mmiy0nvhkmy5ee",
+      "date": "2026-02-28",
+      "amount": 15.95,
+      "category": "subscription",
+      "note": "spotify"
+    },
+    {
+      "id": "mmiy5z34dzgdy8",
+      "date": "2026-03-02",
+      "amount": 62.1,
+      "category": "subscription",
+      "note": "Elevate"
+    },
+    {
+      "id": "mmkafellhtehbc",
+      "date": "2026-03-10",
+      "amount": 54,
+      "category": "transport",
+      "note": "Carte journalière pour zurich"
+    },
+    {
+      "id": "mmpby7q942aulf",
+      "date": "2026-03-12",
+      "amount": 1.4,
+      "category": "gear",
+      "note": "obi zip ties"
+    },
+    {
+      "id": "mmpbyl6c0c0cq2",
+      "date": "2026-03-12",
+      "amount": 12.05,
+      "category": "food",
+      "note": "LIDL"
+    },
+    {
+      "id": "mmpbz6lyg9glw9",
+      "date": "2026-03-12",
+      "amount": 42.55,
+      "category": "food",
+      "note": "Migros "
+    },
+    {
+      "id": "mmpbzk6cz183ul",
+      "date": "2026-03-13",
+      "amount": 44.45,
+      "category": "food",
+      "note": "Migros croset"
+    },
+    {
+      "id": "mmpc54wup55h5z",
+      "date": "2026-03-08",
+      "amount": 2.9,
+      "category": "food",
+      "note": "Socar + coop pronto"
+    },
+    {
+      "id": "mmpc6imxzg960h",
+      "date": "2026-03-10",
+      "amount": 11.1,
+      "category": "transport",
+      "note": "SBB tickets"
+    },
+    {
+      "id": "mmpc7tgom0o1lu",
+      "date": "2026-03-10",
+      "amount": 15,
+      "category": "food",
+      "note": "Revolut recharge for book"
+    },
+    {
+      "id": "mmpc9uul3146t4",
+      "date": "2026-03-10",
+      "amount": 15.45,
+      "category": "food",
+      "note": "Denner"
+    },
+    {
+      "id": "mmpcc230q4hvlx",
+      "date": "2026-03-11",
+      "amount": 20.1,
+      "category": "food",
+      "note": "Socar + coop pronto + migros"
+    },
+    {
+      "id": "mmpcd0jtl06vrd",
+      "date": "2026-03-11",
+      "amount": 3,
+      "category": "other",
+      "note": "Swimming pool"
+    },
+    {
+      "id": "mmpceu9v3nc4iz",
+      "date": "2026-03-11",
+      "amount": 8.7,
+      "category": "transport",
+      "note": "SBB ticket renens nyon"
+    }
+  ],
+  "income": [
+    {
+      "id": "mmixjufqaza7ox",
+      "date": "2026-03-02",
+      "amount": 105,
+      "source": "swimming-lessons",
+      "note": ""
+    },
+    {
+      "id": "mmpcha9e9ag4v3",
+      "date": "2026-03-02",
+      "amount": 903.64,
+      "source": "parents",
+      "note": ""
+    }
+  ],
+  "contacts": [],
+  "weeklyReviews": [],
+  "truth": "Click here to set your Uncomfortable Truth.",
+  "startDate": "2026-03-08",
+  "iron": {
+    "workouts": [
+      {
+        "id": "mmj6oerg37bgzp",
+        "date": "2026-03-09",
+        "exercises": [
+          {
+            "name": "Hack squat",
+            "muscle": "Quads",
+            "sets": 4,
+            "reps": 5,
+            "weight": 120
+          },
+          {
+            "name": "Cable crunch",
+            "muscle": "Core",
+            "sets": 4,
+            "reps": 10,
+            "weight": 113
+          },
+          {
+            "name": "RDL",
+            "muscle": "Hamstrings",
+            "sets": 3,
+            "reps": 8,
+            "weight": 120
+          },
+          {
+            "name": "DB Split squat",
+            "muscle": "Quads",
+            "sets": 3,
+            "reps": 5,
+            "weight": 80
+          }
+        ],
+        "energy": 3,
+        "duration": 90,
+        "notes": "Longer than usual since I answered a call"
+      },
+      {
+        "id": "mmkm1a7jx4su8e",
+        "date": "2026-03-10",
+        "exercises": [
+          {
+            "name": "Weighted Pull ups",
+            "muscle": "Back",
+            "sets": 3,
+            "reps": 5,
+            "weight": 28
+          },
+          {
+            "name": "Incline DB press",
+            "muscle": "Chest",
+            "sets": 3,
+            "reps": 5,
+            "weight": 45
+          },
+          {
+            "name": "Seal Row",
+            "muscle": "Back",
+            "sets": 3,
+            "reps": 6,
+            "weight": 70
+          },
+          {
+            "name": "Shoulder Press (M-Torture machine)",
+            "muscle": "Shoulders",
+            "sets": 2,
+            "reps": 8,
+            "weight": 80
+          },
+          {
+            "name": "Overhead Triceps extension",
+            "muscle": "Triceps",
+            "sets": 3,
+            "reps": 5,
+            "weight": 34
+          },
+          {
+            "name": "Push ups",
+            "muscle": "Triceps",
+            "sets": 3,
+            "reps": 18,
+            "weight": 0
+          }
+        ],
+        "energy": 3,
+        "duration": 75,
+        "notes": "Ate too close to sessions, some nausea due to this. "
+      },
+      {
+        "id": "mmpcyz60tj21pp",
+        "date": "2026-03-13",
+        "exercises": [
+          {
+            "name": "Lat pull down (1 arm)",
+            "muscle": "Back",
+            "sets": 3,
+            "reps": 8,
+            "weight": 99
+          },
+          {
+            "name": "Incline Chest press (M torture)",
+            "muscle": "Chest",
+            "sets": 3,
+            "reps": 8,
+            "weight": 90
+          },
+          {
+            "name": "Lat raise (panatta)",
+            "muscle": "Shoulders",
+            "sets": 3,
+            "reps": 8,
+            "weight": 80
+          },
+          {
+            "name": "Rear delt fly machine",
+            "muscle": "Shoulders",
+            "sets": 3,
+            "reps": 8,
+            "weight": 60
+          },
+          {
+            "name": "DB Hammer curl",
+            "muscle": "Biceps",
+            "sets": 3,
+            "reps": 10,
+            "weight": 30
+          },
+          {
+            "name": "Wrist Curls",
+            "muscle": "Biceps",
+            "sets": 3,
+            "reps": 10,
+            "weight": 10
+          },
+          {
+            "name": "Cable curl",
+            "muscle": "Biceps",
+            "sets": 2,
+            "reps": 10,
+            "weight": 59
+          }
+        ],
+        "energy": 4,
+        "duration": 0,
+        "notes": "Wrist curl is for forearm, not biceps"
+      }
+    ],
+    "swimmingSessions": [
+      {
+        "id": "mmpctcj835oy82",
+        "date": "2026-03-11",
+        "distance": 1075,
+        "duration": 44,
+        "type": "mixed",
+        "drills": [
+          {
+            "name": "Sprint",
+            "distance": 100,
+            "rest": "1,5"
+          },
+          {
+            "name": "Sprint",
+            "distance": 100,
+            "rest": "1,5"
+          },
+          {
+            "name": "Sprint",
+            "distance": 100,
+            "rest": "1,5"
+          }
+        ],
+        "notes": " Intervals. 10min warmup.  3x4mins sprints. 10 min cooldown"
+      }
+    ],
+    "boxingSessions": [
+      {
+        "id": "mmj6qznb8tnsdx",
+        "date": "2026-03-09",
+        "type": "shadow",
+        "rounds": 3,
+        "duration": 3,
+        "mistakes": [
+          {
+            "desc": "Shoulders drop",
+            "category": "conditioning"
+          },
+          {
+            "desc": "Too much bouncing for my weight",
+            "category": "footwork"
+          },
+          {
+            "desc": "Not enough feints",
+            "category": "offense"
+          }
+        ],
+        "workOn": "Don't know based on this. since it is weighted. ",
+        "notes": "1kg each arm. Stuck through the 3 rounds. "
+      },
+      {
+        "id": "mmpcnc57bq19t5",
+        "date": "2026-03-13",
+        "type": "conditioning",
+        "rounds": 0,
+        "duration": 0,
+        "mistakes": [
+          {
+            "desc": "Always taking angles. When not always the right choice",
+            "category": "footwork"
+          }
+        ],
+        "workOn": "Combo: Jab jab. Cross incoming -> counter cross slipping to left and come back. Situation where opponent is in the corner and we want to keep pressure. ",
+        "notes": "Was feeling energetic at the start but quickly faded when doing the conditioning at the end."
+      }
+    ]
+  },
+  "anvil": {
+    "tasks": [],
+    "outreachLog": []
+  },
+  "vault": {
+    "budgetGoals": {
+      "monthlyTarget": 0,
+      "savingsTarget": 10
+    }
+  },
+  "guild": {
+    "interactions": []
+  },
+  "library": {
+    "papers": [],
+    "courses": [],
+    "deepWorkSessions": []
+  }
+}

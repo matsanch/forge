@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE FORGE — Quick Input</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="forge-shared.css">
+<link rel="manifest" href="manifest.json">
+<style>
+  body { display:flex; flex-direction:column; min-height:100vh; background:var(--deep-bg); padding:20px; }
+  .qi-header { text-align:center; margin-bottom:20px; }
+  .qi-header h1 { font-family:'Cinzel',serif; color:var(--gold); font-size:1.5rem; letter-spacing:.2em; }
+  .qi-header a { color:var(--gold); opacity:.6; font-size:.75rem; text-decoration:none; }
+  .qi-input-row { display:flex; gap:8px; margin-bottom:16px; }
+  .qi-input-row textarea { flex:1; padding:12px; background:var(--stone); border:2px solid var(--gold); border-radius:6px; color:var(--bone); font-family:'Fira Code',monospace; font-size:1rem; resize:none; min-height:60px; }
+  .qi-input-row textarea:focus { outline:none; border-color:var(--ember); }
+  .mic-btn { width:50px; height:50px; border-radius:50%; border:2px solid var(--ember); background:transparent; color:var(--ember); font-size:1.2rem; cursor:pointer; flex-shrink:0; align-self:center; transition:all .3s; }
+  .mic-btn.recording { background:var(--ember); color:var(--bone); animation:pulse-mic 1s ease-in-out infinite; }
+  @keyframes pulse-mic { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+  .preview { background:rgba(26,26,46,.9); border:2px solid var(--stone); border-radius:6px; padding:16px; margin-bottom:16px; min-height:80px; }
+  .preview-type { font-family:'Cinzel',serif; color:var(--ember); font-size:.8rem; letter-spacing:.15em; text-transform:uppercase; margin-bottom:8px; }
+  .preview-data { font-family:'Fira Code',monospace; font-size:.8rem; color:var(--bone); opacity:.8; white-space:pre-wrap; }
+  .qi-actions { display:flex; gap:10px; }
+  .qi-actions button { flex:1; padding:14px; border-radius:6px; border:2px solid; font-family:'Cinzel',serif; font-size:1rem; letter-spacing:.1em; cursor:pointer; background:transparent; }
+  .btn-confirm { border-color:var(--green); color:var(--green); }
+  .btn-confirm:hover { background:var(--green); color:var(--deep-bg); }
+  .btn-clear { border-color:var(--stone); color:var(--bone); opacity:.5; }
+  .btn-clear:hover { opacity:1; }
+  .qi-examples { margin-top:20px; padding:16px; opacity:.5; font-size:.7rem; color:var(--bone); }
+  .qi-examples code { color:var(--gold); }
+  .qi-toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--green); color:var(--deep-bg); padding:10px 20px; border-radius:6px; font-family:'Cinzel',serif; display:none; z-index:100; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="forge-shared.js"></script>
+<script src="data-layer.js"></script>
+<script src="input-parser.js"></script>
+</head>
+<body>
+<div class="qi-header">
+  <a href="index.html"><i class="fas fa-arrow-left"></i> Back to Forge</a>
+  <h1>QUICK INPUT</h1>
+  <span id="sync-status" style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>
+</div>
+
+<div class="qi-input-row">
+  <textarea id="qi-text" placeholder="Type or speak..." oninput="previewParse()"></textarea>
+  <button class="mic-btn" id="mic-btn" onclick="toggleMic()"><i class="fas fa-microphone"></i></button>
+</div>
+
+<div class="preview" id="preview">
+  <div class="preview-type" id="preview-type">Waiting for input...</div>
+  <div class="preview-data" id="preview-data"></div>
+</div>
+
+<div class="qi-actions">
+  <button class="btn-clear" onclick="clearInput()">CLEAR</button>
+  <button class="btn-confirm" id="confirm-btn" onclick="confirmEntry()" disabled>CONFIRM</button>
+</div>
+
+<div class="qi-examples">
+  <strong>Examples:</strong><br>
+  <code>spent 27.8 migros food</code><br>
+  <code>gym 90min hack squat 4x5x120, rdl 3x8x100</code><br>
+  <code>swam 1000m 40min</code><br>
+  <code>boxing conditioning 45min</code><br>
+  <code>deep work 2h gait analysis</code><br>
+  <code>earned 500 swimming lessons</code>
+</div>
+
+<div class="qi-toast" id="toast">Logged!</div>
+
+<script>
+let lastParsed = null;
+let recognition = null;
+
+function previewParse() {
+  const text = document.getElementById('qi-text').value;
+  const typeEl = document.getElementById('preview-type');
+  const dataEl = document.getElementById('preview-data');
+  const btn = document.getElementById('confirm-btn');
+
+  if (!text.trim()) {
+    typeEl.textContent = 'Waiting for input...';
+    dataEl.textContent = '';
+    btn.disabled = true;
+    lastParsed = null;
+    return;
+  }
+
+  lastParsed = parseInput(text);
+  typeEl.textContent = lastParsed.type === 'unknown' ? 'Could not parse' : lastParsed.type.replace('_', ' ');
+  dataEl.textContent = JSON.stringify(lastParsed.data, null, 2);
+  btn.disabled = lastParsed.type === 'unknown';
+}
+
+async function confirmEntry() {
+  if (!lastParsed || lastParsed.type === 'unknown') return;
+  const session = await supabase.auth.getSession();
+  if (!session.data.session) { window.location.href = 'login.html'; return; }
+  const userId = session.data.session.user.id;
+  const row = { user_id: userId, ...lastParsed.data };
+
+  const tableMap = {
+    expense: 'expenses', income: 'income', workout: 'workouts',
+    swimming: 'swimming_sessions', boxing: 'boxing_sessions',
+    deep_work: 'deep_work_sessions'
+  };
+  const table = tableMap[lastParsed.type];
+  if (table) await dbInsert(table, row);
+
+  // Show toast
+  const toast = document.getElementById('toast');
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 1500);
+  clearInput();
+}
+
+function clearInput() {
+  document.getElementById('qi-text').value = '';
+  previewParse();
+}
+
+function toggleMic() {
+  const btn = document.getElementById('mic-btn');
+  if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+    alert('Speech recognition not supported in this browser');
+    return;
+  }
+  if (recognition) {
+    recognition.stop();
+    recognition = null;
+    btn.classList.remove('recording');
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.onresult = e => {
+    document.getElementById('qi-text').value = e.results[0][0].transcript;
+    previewParse();
+  };
+  recognition.onend = () => { btn.classList.remove('recording'); recognition = null; };
+  recognition.start();
+  btn.classList.add('recording');
+}
+
+// Hide mic if not supported
+if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+  document.getElementById('mic-btn').style.display = 'none';
+}
+</script>
+</body>
+</html>

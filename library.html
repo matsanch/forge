@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE FORGE — LIBRARY</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="forge-shared.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<link rel="manifest" href="manifest.json">
+</head>
+<body>
+<div id="forge-loading" style="position:fixed;inset:0;background:#0f0f1a;display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="font-family:Cinzel,serif;color:#d4a844;font-size:1.5rem;letter-spacing:.3em">FORGING...</div>
+</div>
+<div class="container">
+
+  <div class="sub-header">
+    <a href="index.html" class="back-link"><i class="fas fa-chevron-left"></i> FORGE</a>
+    <h1><i class="fas fa-book" style="color:var(--ember)"></i> LIBRARY DOMAIN <span id="sync-status" style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-left:8px" title="Online"></span></h1>
+    <span class="domain-badge" id="library-level-badge">LVL 0 — Unforged</span>
+  </div>
+
+  <!-- STATS -->
+  <div class="grid-3" id="library-stats" style="margin-bottom:20px">
+    <!-- Stats: weekly hours, total DW, papers, courses, avg focus, streak -->
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="openModal('deep-work')"><i class="fas fa-brain"></i> Log Deep Work</button>
+    <button class="btn" onclick="openModal('paper')"><i class="fas fa-file-lines"></i> Log Paper</button>
+    <button class="btn" onclick="openModal('course')"><i class="fas fa-graduation-cap"></i> Log Course Progress</button>
+  </div>
+
+  <div class="grid-2">
+    <!-- DEEP WORK LOG -->
+    <div class="panel">
+      <div class="panel-title"><i class="fas fa-brain"></i> DEEP WORK SESSIONS</div>
+      <div id="deepwork-list">
+        <!-- Rendered by renderDeepWorkList() -->
+      </div>
+    </div>
+
+    <!-- PAPER READING LOG -->
+    <div class="panel">
+      <div class="panel-title"><i class="fas fa-file-lines"></i> PAPERS / CHAPTERS READ</div>
+      <div id="paper-list">
+        <!-- Rendered by renderPaperList() -->
+      </div>
+    </div>
+  </div>
+
+  <!-- COURSE TRACKER -->
+  <div class="panel">
+    <div class="panel-title"><i class="fas fa-graduation-cap"></i> COURSE / CERTIFICATION TRACKER</div>
+    <div id="course-list">
+      <!-- Rendered by renderCourseList() -->
+    </div>
+  </div>
+
+  <!-- KNOWLEDGE MAP -->
+  <div class="panel">
+    <div class="panel-title"><i class="fas fa-diagram-project"></i> KNOWLEDGE MAP</div>
+    <div id="knowledge-map">
+      <!-- Rendered by renderKnowledgeMap() -->
+    </div>
+  </div>
+
+  <!-- WEEKLY DEEP WORK HEATMAP -->
+  <div class="panel">
+    <div class="panel-title"><i class="fas fa-calendar-week"></i> DEEP WORK HEATMAP</div>
+    <div id="deepwork-heatmap">
+      <!-- Rendered by renderDeepWorkHeatmap() -->
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-deep-work">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('deep-work')">&times;</button>
+    <h2><i class="fas fa-brain"></i> Log Deep Work Session</h2>
+    <form id="deepwork-form" onsubmit="submitDeepWork(event)">
+      <div class="form-row">
+        <input type="date" class="form-input form-input-md" id="dw-date">
+        <input type="number" class="form-input form-input-sm" id="dw-hours" placeholder="Hours" min="0" step="0.25" required>
+      </div>
+      <div class="form-row">
+        <input type="text" class="form-input" id="dw-topic" placeholder="Topic / what you worked on" required>
+      </div>
+      <div class="form-row">
+        <select class="form-input form-input-md" id="dw-category">
+          <option value="gait-analysis">Gait Analysis</option>
+          <option value="neuro">Neuroscience</option>
+          <option value="programming">Programming</option>
+          <option value="gcp">GCP Training</option>
+          <option value="thesis-research">Thesis Research</option>
+          <option value="signal-processing">Signal Processing</option>
+          <option value="other">Other</option>
+        </select>
+        <select class="form-input form-input-md" id="dw-focus">
+          <option value="5">Focus: 5/5 (flow state)</option>
+          <option value="4">Focus: 4/5 (solid)</option>
+          <option value="3" selected>Focus: 3/5 (decent)</option>
+          <option value="2">Focus: 2/5 (distracted)</option>
+          <option value="1">Focus: 1/5 (couldn't focus)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label style="font-size:.78rem;display:flex;align-items:center;gap:5px;cursor:pointer">
+          <input type="checkbox" id="dw-phone-free" style="accent-color:var(--gold);width:15px;height:15px"> Phone-free session
+        </label>
+      </div>
+      <textarea class="form-input" id="dw-notes" placeholder="Key insights, what you learned, what's still unclear"></textarea>
+      <button type="submit" class="form-submit">LOG DEEP WORK</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-paper">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('paper')">&times;</button>
+    <h2><i class="fas fa-file-lines"></i> Log Paper / Chapter</h2>
+    <form id="paper-form" onsubmit="submitPaper(event)">
+      <div class="form-row">
+        <input type="date" class="form-input form-input-md" id="paper-date">
+      </div>
+      <div class="form-row">
+        <input type="text" class="form-input" id="paper-title" placeholder="Title" required>
+      </div>
+      <div class="form-row">
+        <input type="text" class="form-input" id="paper-authors" placeholder="Authors (optional)">
+      </div>
+      <div class="form-row">
+        <select class="form-input form-input-md" id="paper-type">
+          <option value="paper">Research Paper</option>
+          <option value="chapter">Book Chapter</option>
+          <option value="review">Review Article</option>
+          <option value="tutorial">Tutorial/Guide</option>
+          <option value="preprint">Preprint</option>
+        </select>
+        <select class="form-input form-input-md" id="paper-relevance">
+          <option value="5">Relevance: 5 (core)</option>
+          <option value="4">Relevance: 4 (high)</option>
+          <option value="3" selected>Relevance: 3 (moderate)</option>
+          <option value="2">Relevance: 2 (tangential)</option>
+          <option value="1">Relevance: 1 (background)</option>
+        </select>
+      </div>
+      <textarea class="form-input" id="paper-takeaways" placeholder="Key takeaways (1-3 bullets)" rows="3"></textarea>
+      <div class="form-row">
+        <label style="font-size:.78rem;display:flex;align-items:center;gap:5px;cursor:pointer">
+          <input type="checkbox" id="paper-explain" style="accent-color:var(--gold);width:15px;height:15px"> Can explain without notes
+        </label>
+      </div>
+      <button type="submit" class="form-submit">LOG PAPER</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-course">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('course')">&times;</button>
+    <h2><i class="fas fa-graduation-cap"></i> Log Course Progress</h2>
+    <form id="course-form" onsubmit="submitCourse(event)">
+      <div class="form-row">
+        <input type="text" class="form-input" id="course-name" placeholder="Course name (e.g., GCP Fundamentals)" required>
+      </div>
+      <div class="form-row">
+        <input type="number" class="form-input form-input-sm" id="course-completed" placeholder="Done" min="0">
+        <span style="opacity:.6">/</span>
+        <input type="number" class="form-input form-input-sm" id="course-total" placeholder="Total" min="0">
+        <label style="font-size:.78rem;opacity:.6">modules</label>
+      </div>
+      <div class="form-row">
+        <input type="date" class="form-input form-input-md" id="course-target" placeholder="Target completion">
+        <label style="font-size:.78rem;opacity:.6">Target date</label>
+      </div>
+      <textarea class="form-input" id="course-notes" placeholder="What you covered today, next module"></textarea>
+      <button type="submit" class="form-submit">UPDATE COURSE</button>
+    </form>
+  </div>
+</div>
+
+<script src="forge-shared.js"></script>
+<script src="data-layer.js"></script>
+<script>
+// ========================================================================
+// LIBRARY SUBPAGE
+// ========================================================================
+
+function renderAll() {
+  const lvl = S.domains.library;
+  document.getElementById('library-level-badge').textContent = `LVL ${lvl} — ${DOMAIN_META.library.titles[lvl]}`;
+  renderLibraryStats();
+  renderDeepWorkList();
+  renderPaperList();
+  renderCourseList();
+  renderKnowledgeMap();
+  renderDeepWorkHeatmap();
+}
+
+function renderLibraryStats() {
+  const el = document.getElementById('library-stats');
+  const totalDW = S.library.deepWorkSessions.reduce((a,s) => a + (s.hours||0), 0);
+  // Weekly hours: sessions in last 7 days
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+  const weekStr = weekAgo.toISOString().slice(0,10);
+  const weeklyDW = S.library.deepWorkSessions.filter(s=>s.date>=weekStr).reduce((a,s)=>a+(s.hours||0),0);
+  // Streak: consecutive days with at least one deep work session (counting back from today)
+  const dwDates = new Set(S.library.deepWorkSessions.map(s=>s.date));
+  let streak = 0;
+  const d = new Date();
+  while(true) {
+    const ds = d.toISOString().slice(0,10);
+    if (dwDates.has(ds)) { streak++; d.setDate(d.getDate()-1); } else break;
+  }
+  el.innerHTML = [
+    { label:'This Week', value: weeklyDW.toFixed(1) + 'h' },
+    { label:'Total Deep Work', value: totalDW.toFixed(1) + 'h' },
+    { label:'Papers Read', value: S.library.papers.length },
+    { label:'Courses Active', value: S.library.courses.length },
+    { label:'Avg Focus', value: S.library.deepWorkSessions.length ? (S.library.deepWorkSessions.reduce((a,s)=>a+(s.focus||3),0)/S.library.deepWorkSessions.length).toFixed(1) + '/5' : '--' },
+    { label:'Day Streak', value: streak + 'd' }
+  ].map(s => `<div class="stat-mini"><span class="sm-value">${s.value}</span><span class="sm-label">${s.label}</span></div>`).join('');
+}
+
+function renderDeepWorkList() {
+  const el = document.getElementById('deepwork-list');
+  if (!S.library.deepWorkSessions.length) { el.innerHTML = '<div class="empty-state">No deep work sessions logged.</div>'; return; }
+  el.innerHTML = [...S.library.deepWorkSessions].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20).map(s => `<div class="entry-card">
+    <div class="entry-date">${s.date} <span class="entry-meta">${s.hours}h · Focus ${s.focus}/5 · ${s.category}${s.phoneFree?' · Phone-free':''}</span></div>
+    <div style="font-size:.8rem">${esc(s.topic)}</div>
+    ${s.notes ? `<div style="margin-top:4px;opacity:.7;font-size:.75rem">${esc(s.notes)}</div>` : ''}
+  </div>`).join('');
+}
+
+function renderPaperList() {
+  const el = document.getElementById('paper-list');
+  if (!S.library.papers.length) { el.innerHTML = '<div class="empty-state">No papers logged yet.</div>'; return; }
+  el.innerHTML = [...S.library.papers].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20).map(p => `<div class="entry-card">
+    <div class="entry-date">${p.date} <span class="entry-meta">${p.type} · Relevance ${p.relevance}/5${p.canExplain?' · Can explain':''}</span></div>
+    <div style="font-size:.8rem"><strong>${esc(p.title)}</strong></div>
+    ${p.authors ? `<div style="font-size:.72rem;opacity:.5">${esc(p.authors)}</div>` : ''}
+    ${p.takeaways ? `<div style="margin-top:4px;opacity:.7;font-size:.75rem">${esc(p.takeaways)}</div>` : ''}
+  </div>`).join('');
+}
+
+function renderCourseList() {
+  const el = document.getElementById('course-list');
+  if (!S.library.courses.length) { el.innerHTML = '<div class="empty-state">No courses tracked yet.</div>'; return; }
+  el.innerHTML = S.library.courses.map(c => {
+    const pct = c.total > 0 ? Math.round((c.completed/c.total)*100) : 0;
+    return `<div class="entry-card">
+      <div class="entry-date"><strong>${esc(c.name)}</strong> <span class="entry-meta">${c.completed||0}/${c.total||'?'} modules · ${pct}%</span></div>
+      <div style="height:8px;background:rgba(212,168,68,.1);border-radius:4px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--gold);border-radius:4px"></div></div>
+      ${c.target ? `<div style="margin-top:4px;font-size:.7rem;opacity:.5">Target: ${c.target}</div>` : ''}
+      ${c.notes ? `<div style="margin-top:4px;opacity:.7;font-size:.75rem">${esc(c.notes)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderKnowledgeMap() {
+  const el = document.getElementById('knowledge-map');
+  const topics = {};
+  // Deep work categories
+  S.library.deepWorkSessions.forEach(s => { topics[s.category] = (topics[s.category]||0) + 1; });
+  // Paper types and extract keywords from titles
+  S.library.papers.forEach(p => {
+    topics[p.type] = (topics[p.type]||0) + 1;
+    // Extract meaningful words from paper titles (4+ chars, skip common words)
+    const skip = new Set(['with','from','that','this','they','their','than','into','have','been','were','what','when','where','which','about','using','based','between','through','analysis','approach','study']);
+    if (p.title) p.title.toLowerCase().split(/\W+/).filter(w => w.length >= 4 && !skip.has(w)).forEach(w => { topics[w] = (topics[w]||0) + 1; });
+  });
+  if (!Object.keys(topics).length) { el.innerHTML = '<div class="empty-state">Log deep work or papers to build your knowledge map.</div>'; return; }
+  const max = Math.max(...Object.values(topics));
+  el.innerHTML = Object.entries(topics).sort((a,b)=>b[1]-a[1]).map(([t,c]) => {
+    const size = Math.min(1.3, 0.65 + (c/max)*0.65);
+    const opacity = 0.5 + (c/max)*0.5;
+    return `<span class="tag" style="font-size:${size}rem;opacity:${opacity}">${t} (${c})</span>`;
+  }).join(' ');
+}
+
+function renderDeepWorkHeatmap() {
+  const el = document.getElementById('deepwork-heatmap');
+  if (!S.library.deepWorkSessions.length) { el.innerHTML = '<div class="empty-state">Log deep work sessions to see your heatmap.</div>'; return; }
+  // Build hours-per-day map
+  const hoursMap = {};
+  S.library.deepWorkSessions.forEach(s => { hoursMap[s.date] = (hoursMap[s.date]||0) + (s.hours||0); });
+  const maxH = Math.max(...Object.values(hoursMap), 1);
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  // Build 4-week grid (most recent week on right)
+  const t = new Date(); t.setHours(0,0,0,0);
+  // Find the Monday of 3 weeks ago
+  const dow = t.getDay() === 0 ? 6 : t.getDay() - 1; // 0=Mon
+  const startDate = new Date(t); startDate.setDate(t.getDate() - dow - 21);
+  let html = '<div style="display:grid;grid-template-columns:40px repeat(4,1fr);gap:4px;font-size:.7rem">';
+  // Week labels
+  html += '<div></div>';
+  for (let w = 0; w < 4; w++) {
+    const wStart = new Date(startDate); wStart.setDate(startDate.getDate() + w*7);
+    html += `<div style="text-align:center;opacity:.4;font-family:'Fira Code',monospace;font-size:.6rem">${wStart.toLocaleDateString('en',{month:'short',day:'numeric'})}</div>`;
+  }
+  // Day rows
+  for (let d = 0; d < 7; d++) {
+    html += `<div style="font-family:'Fira Code',monospace;opacity:.5;display:flex;align-items:center">${days[d]}</div>`;
+    for (let w = 0; w < 4; w++) {
+      const cellDate = new Date(startDate); cellDate.setDate(startDate.getDate() + w*7 + d);
+      const ds = cellDate.toISOString().slice(0,10);
+      const h = hoursMap[ds] || 0;
+      const intensity = h > 0 ? 0.2 + (h/maxH)*0.8 : 0.03;
+      const bg = h > 0 ? `rgba(212,168,68,${intensity})` : 'rgba(212,168,68,0.03)';
+      const border = h > 0 ? 'rgba(212,168,68,.4)' : 'rgba(212,168,68,.1)';
+      const isToday = ds === today();
+      html += `<div style="height:32px;background:${bg};border:1px solid ${border};border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'Fira Code',monospace;font-size:.65rem;color:var(--bone);${isToday?'box-shadow:0 0 0 2px var(--gold);':''}" title="${ds}: ${h.toFixed(1)}h">${h > 0 ? h.toFixed(1) : ''}</div>`;
+    }
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ==================== SUBMISSIONS ====================
+async function submitDeepWork(e) {
+  e.preventDefault();
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const dw = {
+    id: uid(),
+    date: document.getElementById('dw-date').value || today(),
+    hours: parseFloat(document.getElementById('dw-hours').value) || 0,
+    topic: document.getElementById('dw-topic').value,
+    category: document.getElementById('dw-category').value,
+    focus: parseInt(document.getElementById('dw-focus').value) || 3,
+    phoneFree: document.getElementById('dw-phone-free').checked,
+    notes: document.getElementById('dw-notes').value
+  };
+  S.library.deepWorkSessions.push(dw);
+  await dbInsert('deep_work_sessions',{user_id:userId,...dw});
+  cacheState(); closeModal('deep-work'); renderAll();
+  document.getElementById('deepwork-form').reset();
+}
+
+async function submitPaper(e) {
+  e.preventDefault();
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const paper = {
+    id: uid(),
+    date: document.getElementById('paper-date').value || today(),
+    title: document.getElementById('paper-title').value,
+    authors: document.getElementById('paper-authors').value,
+    type: document.getElementById('paper-type').value,
+    relevance: parseInt(document.getElementById('paper-relevance').value) || 3,
+    takeaways: document.getElementById('paper-takeaways').value,
+    canExplain: document.getElementById('paper-explain').checked
+  };
+  S.library.papers.push(paper);
+  await dbInsert('papers',{user_id:userId,...paper});
+  cacheState(); closeModal('paper'); renderAll();
+  document.getElementById('paper-form').reset();
+}
+
+async function submitCourse(e) {
+  e.preventDefault();
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const name = document.getElementById('course-name').value;
+  const existing = S.library.courses.find(c => c.name.toLowerCase() === name.toLowerCase());
+  if (existing) {
+    existing.completed = parseInt(document.getElementById('course-completed').value) || existing.completed;
+    existing.total = parseInt(document.getElementById('course-total').value) || existing.total;
+    existing.target = document.getElementById('course-target').value || existing.target;
+    existing.notes = document.getElementById('course-notes').value || existing.notes;
+    existing.lastUpdated = today();
+    await dbUpdate('courses',existing.id,{completed:existing.completed,total:existing.total,target:existing.target,notes:existing.notes,lastUpdated:existing.lastUpdated});
+  } else {
+    const course = {
+      id: uid(), name,
+      completed: parseInt(document.getElementById('course-completed').value) || 0,
+      total: parseInt(document.getElementById('course-total').value) || 0,
+      target: document.getElementById('course-target').value,
+      notes: document.getElementById('course-notes').value,
+      lastUpdated: today()
+    };
+    S.library.courses.push(course);
+    await dbInsert('courses',{user_id:userId,...course});
+  }
+  cacheState(); closeModal('course'); renderAll();
+  document.getElementById('course-form').reset();
+}
+
+function openModal(name) {
+  document.getElementById('modal-'+name).classList.add('open');
+  if (name === 'deep-work') document.getElementById('dw-date').value = today();
+  if (name === 'paper') document.getElementById('paper-date').value = today();
+}
+function closeModal(name) { document.getElementById('modal-'+name).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+
+initForge(() => renderAll());
+</script>
+<a href="quick-input.html" class="qi-fab" title="Quick Input"><i class="fas fa-microphone"></i></a>
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE FORGE — GUILD</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="forge-shared.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<link rel="manifest" href="manifest.json">
+</head>
+<body>
+<div id="forge-loading" style="position:fixed;inset:0;background:#0f0f1a;display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="font-family:Cinzel,serif;color:#d4a844;font-size:1.5rem;letter-spacing:.3em">FORGING...</div>
+</div>
+<div class="container">
+
+  <div class="sub-header">
+    <a href="index.html" class="back-link"><i class="fas fa-chevron-left"></i> FORGE</a>
+    <h1><i class="fas fa-users" style="color:var(--ember)"></i> GUILD DOMAIN <span id="sync-status" style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-left:8px" title="Online"></span></h1>
+    <span class="domain-badge" id="guild-level-badge">LVL 0 — Unforged</span>
+  </div>
+
+  <!-- STATS -->
+  <div class="grid-3" id="guild-stats" style="margin-bottom:20px">
+    <!-- Agent task: total contacts, outreach sent, responses, meetings held,
+         warm leads, outreach zero-streak -->
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="openModal('contact')"><i class="fas fa-user-plus"></i> Add Contact</button>
+    <button class="btn" onclick="openModal('interaction')"><i class="fas fa-comments"></i> Log Interaction</button>
+  </div>
+
+  <!-- CONTACT CRM -->
+  <div class="panel">
+    <div class="panel-title"><i class="fas fa-address-book"></i> CONTACT CRM</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn btn-sm" onclick="filterContacts('all')">All</button>
+      <button class="btn btn-sm" onclick="filterContacts('thesis-target')">Thesis</button>
+      <button class="btn btn-sm" onclick="filterContacts('professor')">Professors</button>
+      <button class="btn btn-sm" onclick="filterContacts('colleague')">Colleagues</button>
+    </div>
+    <div id="contact-crm">
+      <!-- Agent task: detailed contact cards with:
+           name, org, type, status badge (color-coded), last interaction date,
+           notes, edit/delete buttons, status progression buttons -->
+    </div>
+  </div>
+
+  <!-- INTERACTION TIMELINE -->
+  <div class="panel">
+    <div class="panel-title"><i class="fas fa-timeline"></i> INTERACTION TIMELINE</div>
+    <div id="interaction-timeline">
+      <!-- Agent task: chronological list of all interactions:
+           date, person, type (email/call/meeting/linkedin), outcome, follow-up needed -->
+    </div>
+  </div>
+
+  <!-- OUTREACH PIPELINE -->
+  <div class="panel">
+    <div class="panel-title"><i class="fas fa-funnel-dollar"></i> OUTREACH PIPELINE</div>
+    <div id="outreach-pipeline">
+      <!-- Agent task: funnel visualization:
+           Identified → Contacted → Responded → Meeting → Warm
+           Show conversion rates between stages -->
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-contact">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('contact')">&times;</button>
+    <h2><i class="fas fa-user-plus"></i> Add Contact</h2>
+    <form id="contact-form" onsubmit="submitContact(event)">
+      <div class="form-row"><input type="text" class="form-input" id="ct-name" placeholder="Name" required></div>
+      <div class="form-row"><input type="text" class="form-input" id="ct-org" placeholder="Organization"></div>
+      <div class="form-row">
+        <select class="form-input form-input-md" id="ct-type">
+          <option value="thesis-target">Thesis Target</option>
+          <option value="colleague">Colleague</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="professor">Professor</option>
+          <option value="recruiter">Recruiter</option>
+          <option value="other">Other</option>
+        </select>
+        <select class="form-input form-input-md" id="ct-status">
+          <option value="identified">Identified</option>
+          <option value="contacted">Contacted</option>
+          <option value="responded">Responded</option>
+          <option value="meeting-held">Meeting Held</option>
+          <option value="warm">Warm Lead</option>
+        </select>
+      </div>
+      <div class="form-row"><input type="text" class="form-input" id="ct-email" placeholder="Email (optional)"></div>
+      <div class="form-row"><input type="text" class="form-input" id="ct-linkedin" placeholder="LinkedIn URL (optional)"></div>
+      <textarea class="form-input" id="ct-note" placeholder="How you met, what to follow up on"></textarea>
+      <button type="submit" class="form-submit">ADD CONTACT</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-interaction">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('interaction')">&times;</button>
+    <h2><i class="fas fa-comments"></i> Log Interaction</h2>
+    <form id="interaction-form" onsubmit="submitInteraction(event)">
+      <div class="form-row">
+        <input type="date" class="form-input form-input-md" id="int-date">
+        <select class="form-input form-input-md" id="int-contact">
+          <!-- Agent task: populate with S.contacts names -->
+        </select>
+      </div>
+      <div class="form-row">
+        <select class="form-input form-input-md" id="int-type">
+          <option value="email">Email</option>
+          <option value="linkedin">LinkedIn</option>
+          <option value="call">Call</option>
+          <option value="meeting">Meeting</option>
+          <option value="in-person">In Person</option>
+          <option value="other">Other</option>
+        </select>
+        <select class="form-input form-input-md" id="int-direction">
+          <option value="outbound">Outbound (I reached out)</option>
+          <option value="inbound">Inbound (They reached out)</option>
+        </select>
+      </div>
+      <textarea class="form-input" id="int-notes" placeholder="What was discussed, outcome, next steps"></textarea>
+      <div class="form-row">
+        <input type="date" class="form-input form-input-md" id="int-followup" placeholder="Follow-up date">
+        <label style="font-size:.78rem;opacity:.6">Follow-up by</label>
+      </div>
+      <button type="submit" class="form-submit">LOG INTERACTION</button>
+    </form>
+  </div>
+</div>
+
+<script src="forge-shared.js"></script>
+<script src="data-layer.js"></script>
+<script>
+// ========================================================================
+// GUILD SUBPAGE — Skeleton Script
+// Agent task: Implement rendering and computations
+// ========================================================================
+
+let contactFilter = 'all';
+
+function renderAll() {
+  const lvl = S.domains.guild;
+  document.getElementById('guild-level-badge').textContent = `LVL ${lvl} — ${DOMAIN_META.guild.titles[lvl]}`;
+  renderGuildStats();
+  renderContactCRM();
+  renderInteractionTimeline();
+  renderOutreachPipeline();
+  populateContactDropdown();
+}
+
+function renderGuildStats() {
+  const el = document.getElementById('guild-stats');
+  const statusCounts = {};
+  S.contacts.forEach(c => { statusCounts[c.status] = (statusCounts[c.status]||0)+1; });
+  // outreach zero-streak from daily logs
+  const sorted = [...S.dailyLogs].sort((a,b)=>b.date.localeCompare(a.date));
+  let streak = 0; for (const l of sorted) { if ((l.outreachCount||0)===0 && !l.guildOutreach) streak++; else break; }
+
+  el.innerHTML = [
+    { label:'Total Contacts', value: S.contacts.length },
+    { label:'Contacted', value: statusCounts['contacted']||0 },
+    { label:'Responded', value: statusCounts['responded']||0 },
+    { label:'Meetings Held', value: statusCounts['meeting-held']||0 },
+    { label:'Warm Leads', value: statusCounts['warm']||0 },
+    { label:'Zero-Streak', value: streak + ' days' }
+  ].map(s => `<div class="stat-mini"><span class="sm-value">${s.value}</span><span class="sm-label">${s.label}</span></div>`).join('');
+}
+
+function filterContacts(type) { contactFilter = type; renderContactCRM(); }
+
+function renderContactCRM() {
+  const el = document.getElementById('contact-crm');
+  let contacts = [...S.contacts];
+  if (contactFilter !== 'all') contacts = contacts.filter(c => c.type === contactFilter);
+  if (!contacts.length) { el.innerHTML = '<div class="empty-state">No contacts yet.</div>'; return; }
+
+  const statusColors = { identified:'var(--bone)', contacted:'var(--gold)', responded:'var(--green)', 'meeting-held':'var(--green)', warm:'var(--green)' };
+  const statusOrder = { warm:0, 'meeting-held':1, responded:2, contacted:3, identified:4 };
+  contacts.sort((a,b) => (statusOrder[a.status]||5) - (statusOrder[b.status]||5));
+
+  const stages = ['identified','contacted','responded','meeting-held','warm'];
+  el.innerHTML = contacts.map(c => {
+    const lastInt = S.guild.interactions.filter(i => i.contactId === c.id).sort((a,b) => b.date.localeCompare(a.date))[0];
+    const stageIdx = stages.indexOf(c.status);
+    const canAdvance = stageIdx < stages.length - 1;
+    const canRegress = stageIdx > 0;
+    return `<div class="entry-card">
+      <div class="entry-date">
+        <span><strong>${esc(c.name)}</strong> · ${esc(c.org||'')} · <span style="color:${statusColors[c.status]||'var(--bone)'}"><i class="fas fa-circle" style="font-size:.45rem;vertical-align:middle;margin-right:3px"></i>${c.status.replace('-',' ')}</span></span>
+        <span>
+          <span class="tag">${c.type}</span>
+          ${canRegress ? `<button class="btn btn-sm" onclick="advanceStatus('${c.id}',-1)" title="Regress status" style="margin-left:2px;font-size:.55rem;padding:2px 5px"><i class="fas fa-chevron-left"></i></button>` : ''}
+          ${canAdvance ? `<button class="btn btn-sm" onclick="advanceStatus('${c.id}',1)" title="Advance status" style="margin-left:2px;font-size:.55rem;padding:2px 5px"><i class="fas fa-chevron-right"></i></button>` : ''}
+          <button class="btn btn-sm" onclick="editContact('${c.id}')" style="margin-left:2px" title="Edit"><i class="fas fa-pen"></i></button>
+          <button class="btn btn-delete btn-sm" onclick="deleteContact('${c.id}')" style="margin-left:2px">&times;</button>
+        </span>
+      </div>
+      ${c.email || c.linkedin ? `<div style="margin-top:3px;font-size:.68rem;opacity:.5">${c.email ? '<i class="fas fa-envelope"></i> '+esc(c.email) : ''} ${c.linkedin ? '<i class="fab fa-linkedin"></i> '+esc(c.linkedin) : ''}</div>` : ''}
+      ${lastInt ? `<div style="margin-top:3px;font-size:.68rem;color:var(--gold)"><i class="fas fa-clock"></i> Last: ${lastInt.date} — ${lastInt.type} (${lastInt.direction})</div>` : `<div style="margin-top:3px;font-size:.68rem;opacity:.35"><i class="fas fa-clock"></i> No interactions logged</div>`}
+      ${c.note ? `<div style="margin-top:4px;opacity:.7;font-size:.75rem">${esc(c.note)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderInteractionTimeline() {
+  const el = document.getElementById('interaction-timeline');
+  if (!S.guild.interactions.length) { el.innerHTML = '<div class="empty-state">No interactions logged yet.</div>'; return; }
+  const sorted = [...S.guild.interactions].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30);
+  const typeIcons = { email:'fa-envelope', linkedin:'fa-brands fa-linkedin', call:'fa-phone', meeting:'fa-handshake', 'in-person':'fa-user-group', other:'fa-comment' };
+  const dirColors = { outbound:'var(--gold)', inbound:'var(--green)' };
+  const isOverdue = (d) => d && d < today();
+  el.innerHTML = sorted.map((i, idx) => `<div style="display:flex;gap:12px;align-items:stretch">
+    <div style="display:flex;flex-direction:column;align-items:center;width:24px;flex-shrink:0">
+      <div style="width:10px;height:10px;border-radius:50%;background:${dirColors[i.direction]||'var(--bone)'};border:2px solid ${dirColors[i.direction]||'var(--bone)'};flex-shrink:0;margin-top:14px"></div>
+      ${idx < sorted.length - 1 ? '<div style="flex:1;width:2px;background:rgba(212,168,68,.2)"></div>' : ''}
+    </div>
+    <div class="entry-card" style="flex:1;margin-bottom:4px">
+      <div class="entry-date">
+        <span>${i.date} <i class="${typeIcons[i.type]||'fa-comment'} fas" style="margin-left:4px;opacity:.5"></i></span>
+        <span class="entry-meta">${i.type} · ${i.direction}</span>
+      </div>
+      <div style="font-size:.8rem"><strong>${esc(i.contactName||'?')}</strong></div>
+      ${i.notes ? `<div style="margin-top:4px;opacity:.7;font-size:.75rem">${esc(i.notes)}</div>` : ''}
+      ${i.followup ? `<div style="margin-top:4px;color:${isOverdue(i.followup) ? 'var(--ember)' : 'var(--gold)'};font-size:.7rem"><i class="fas fa-clock"></i> Follow up by ${i.followup}${isOverdue(i.followup) ? ' <strong>(OVERDUE)</strong>' : ''}</div>` : ''}
+    </div>
+  </div>`).join('');
+}
+
+function renderOutreachPipeline() {
+  const el = document.getElementById('outreach-pipeline');
+  const stages = ['identified','contacted','responded','meeting-held','warm'];
+  const stageLabels = ['Identified','Contacted','Responded','Meeting Held','Warm Lead'];
+  const stageColors = ['var(--bone)','var(--gold)','var(--green)','var(--green)','var(--ember)'];
+  const counts = stages.map(s => S.contacts.filter(c => c.status === s).length);
+  const total = S.contacts.length || 1;
+
+  // Funnel: each stage shows count, bar width proportional to total, and conversion rate to next
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px">` +
+    stages.map((s, i) => {
+      const pct = Math.round((counts[i]/total)*100);
+      const barW = Math.max(15, pct);
+      const convRate = i > 0 && counts[i-1] > 0 ? Math.round((counts[i]/counts[i-1])*100) : null;
+      return `${i > 0 ? `<div style="text-align:center;font-family:'Fira Code',monospace;font-size:.6rem;opacity:.4;margin:-2px 0"><i class="fas fa-arrow-down"></i> ${convRate !== null ? convRate+'% conversion' : '—'}</div>` : ''}
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:90px;font-family:'Fira Code',monospace;font-size:.68rem;text-align:right;opacity:.7">${stageLabels[i]}</div>
+          <div style="flex:1;position:relative;height:28px">
+            <div style="width:${barW}%;height:100%;background:${stageColors[i]};opacity:.25;border-radius:4px;transition:width .3s"></div>
+            <div style="position:absolute;top:50%;left:8px;transform:translateY(-50%);font-family:'Fira Code',monospace;font-size:.82rem;font-weight:600">${counts[i]}</div>
+          </div>
+        </div>`;
+    }).join('') + '</div>';
+}
+
+function populateContactDropdown() {
+  const sel = document.getElementById('int-contact');
+  sel.innerHTML = '<option value="">-- Select contact --</option>' +
+    S.contacts.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+}
+
+// ==================== SUBMISSIONS ====================
+async function submitContact(e) {
+  e.preventDefault();
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const ct = {
+    id: uid(), name: document.getElementById('ct-name').value,
+    org: document.getElementById('ct-org').value, type: document.getElementById('ct-type').value,
+    status: document.getElementById('ct-status').value, note: document.getElementById('ct-note').value,
+    email: document.getElementById('ct-email').value, linkedin: document.getElementById('ct-linkedin').value,
+    date: today()
+  };
+  S.contacts.push(ct);
+  await dbInsert('contacts',{user_id:userId,...ct});
+  cacheState(); closeModal('contact'); renderAll();
+  document.getElementById('contact-form').reset();
+}
+
+async function submitInteraction(e) {
+  e.preventDefault();
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const contactId = document.getElementById('int-contact').value;
+  const contact = S.contacts.find(c => c.id === contactId);
+  const interaction = {
+    id: uid(),
+    date: document.getElementById('int-date').value || today(),
+    contactId, contactName: contact ? contact.name : document.getElementById('int-contact').value,
+    type: document.getElementById('int-type').value,
+    direction: document.getElementById('int-direction').value,
+    notes: document.getElementById('int-notes').value,
+    followup: document.getElementById('int-followup').value
+  };
+  S.guild.interactions.push(interaction);
+  await dbInsert('guild_interactions',{user_id:userId,...interaction});
+  cacheState(); closeModal('interaction'); renderAll();
+  document.getElementById('interaction-form').reset();
+}
+
+async function deleteContact(id) { S.contacts = S.contacts.filter(c => c.id !== id); await dbDelete('contacts',id); cacheState(); renderAll(); }
+
+async function advanceStatus(id, dir) {
+  const stages = ['identified','contacted','responded','meeting-held','warm'];
+  const c = S.contacts.find(c => c.id === id);
+  if (!c) return;
+  const idx = stages.indexOf(c.status);
+  const next = idx + dir;
+  if (next >= 0 && next < stages.length) { c.status = stages[next]; await dbUpdate('contacts',id,{status:c.status}); cacheState(); renderAll(); }
+}
+
+async function editContact(id) {
+  const c = S.contacts.find(c => c.id === id);
+  if (!c) return;
+  document.getElementById('ct-name').value = c.name || '';
+  document.getElementById('ct-org').value = c.org || '';
+  document.getElementById('ct-type').value = c.type || 'other';
+  document.getElementById('ct-status').value = c.status || 'identified';
+  document.getElementById('ct-email').value = c.email || '';
+  document.getElementById('ct-linkedin').value = c.linkedin || '';
+  document.getElementById('ct-note').value = c.note || '';
+  // Remove old and re-add on submit (reuse form)
+  S.contacts = S.contacts.filter(x => x.id !== id);
+  await dbDelete('contacts',id);
+  openModal('contact');
+}
+
+function openModal(name) {
+  document.getElementById('modal-'+name).classList.add('open');
+  if (name === 'interaction') {
+    document.getElementById('int-date').value = today();
+    populateContactDropdown();
+  }
+}
+function closeModal(name) { document.getElementById('modal-'+name).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); }));
+
+initForge(() => renderAll());
+</script>
+<a href="quick-input.html" class="qi-fab" title="Quick Input"><i class="fas fa-microphone"></i></a>
+</body>
+</html>

@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE FORGE - Life Operating System</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Fira+Code:wght@400;500&family=Inter:wght@300;400;600&display=swap');
+:root{--charcoal:#1a1a2e;--deep-bg:#0f0f1a;--ember:#e94560;--gold:#d4a844;--bone:#f0e6d3;--blood:#8b0000;--stone:#2a2a3e;--green:#4ade80}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--deep-bg);color:var(--bone);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 80%,rgba(233,69,96,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(212,168,68,.06) 0%,transparent 60%),radial-gradient(ellipse at 50% 50%,rgba(139,0,0,.04) 0%,transparent 80%);pointer-events:none;z-index:0}
+.container{max-width:1440px;margin:0 auto;padding:20px;position:relative;z-index:1}
+.header{text-align:center;padding:30px 0 15px;border-bottom:2px solid var(--gold);margin-bottom:20px}
+.header h1{font-family:'Cinzel',serif;font-size:3.5rem;font-weight:900;letter-spacing:.3em;background:linear-gradient(135deg,var(--gold),var(--ember),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 20px rgba(233,69,96,.3))}
+.header .subtitle{font-family:'Fira Code',monospace;font-size:.85rem;color:var(--gold);opacity:.7;margin-top:8px;letter-spacing:.15em}
+.header .power-level{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--ember);margin-top:5px}
+/* Phase banner */
+.phase-banner{text-align:center;font-family:'Fira Code',monospace;font-size:.75rem;color:var(--gold);opacity:.6;padding:4px 0;letter-spacing:.1em}
+.phase-banner .phase-name{color:var(--ember);font-weight:600}
+/* Deload warning */
+.deload-warning{background:linear-gradient(135deg,rgba(233,69,96,.2),rgba(139,0,0,.15));border:2px solid var(--ember);border-radius:8px;padding:16px;margin-bottom:20px;text-align:center;animation:pulse-border 2s ease-in-out infinite;display:none}
+.deload-warning.active{display:block}
+.deload-warning h3{font-family:'Cinzel',serif;color:var(--ember);margin-bottom:6px}
+.deload-warning p{font-size:.85rem;opacity:.8}
+@keyframes pulse-border{0%,100%{border-color:var(--ember)}50%{border-color:var(--blood)}}
+/* Action bar */
+.action-bar{display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+.action-btn{font-family:'Cinzel',serif;font-size:.75rem;padding:8px 16px;border:2px solid var(--gold);border-radius:6px;background:transparent;color:var(--gold);cursor:pointer;transition:all .3s;letter-spacing:.08em;display:flex;align-items:center;gap:6px}
+.action-btn:hover{background:var(--gold);color:var(--deep-bg)}
+.action-btn.primary{border-color:var(--ember);color:var(--ember)}
+.action-btn.primary:hover{background:var(--ember);color:var(--bone)}
+.action-btn.sunday{border-color:var(--green);color:var(--green)}
+.action-btn.sunday:hover{background:var(--green);color:var(--deep-bg)}
+/* Domain nav */
+.domain-nav-link:hover{background:rgba(240,230,211,.1);transform:translateY(-1px)}
+/* Grid */
+.dashboard-grid{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:20px;margin-bottom:20px}
+/* Panel */
+.panel{background:rgba(26,26,46,.85);backdrop-filter:blur(15px);border:2px solid var(--gold);border-radius:8px;padding:20px;position:relative;overflow:hidden}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.panel-title{font-family:'Cinzel',serif;font-size:1rem;color:var(--gold);letter-spacing:.12em;margin-bottom:15px;display:flex;align-items:center;gap:10px}
+.panel-title i{color:var(--ember)}
+.panel-title .panel-action{margin-left:auto;font-size:.7rem;cursor:pointer;opacity:.5;transition:opacity .3s}
+.panel-title .panel-action:hover{opacity:1}
+/* Radar */
+.radar-container{width:100%;max-width:300px;margin:0 auto}
+.domain-levels{margin-top:12px}
+.domain-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(212,168,68,.15);font-family:'Fira Code',monospace;font-size:.75rem}
+.domain-row .domain-name{display:flex;align-items:center;gap:6px}
+.domain-row .domain-level{color:var(--gold);font-weight:600}
+.domain-row.degraded .domain-level{color:var(--ember);animation:pulse-red 2s ease-in-out infinite}
+@keyframes pulse-red{0%,100%{opacity:1}50%{opacity:.4}}
+/* Streaks */
+.streak-bar{display:flex;gap:2px;margin-top:2px}
+.streak-dot{width:8px;height:8px;border-radius:2px;background:rgba(212,168,68,.15)}
+.streak-dot.hit{background:var(--green)}
+.streak-dot.miss{background:var(--ember)}
+/* Level-up suggestion */
+.levelup-hint{font-size:.65rem;color:var(--green);margin-top:4px;cursor:pointer;opacity:.8}
+.levelup-hint:hover{opacity:1;text-decoration:underline}
+/* Quest */
+.quest-card{background:linear-gradient(135deg,rgba(240,230,211,.08),rgba(240,230,211,.03));border:1px solid rgba(212,168,68,.4);border-radius:6px;padding:12px;margin-bottom:10px;position:relative}
+.quest-card:hover{border-color:var(--gold)}
+.quest-status-indicator{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;border:2px solid var(--gold);background:transparent}
+.quest-card.completed .quest-status-indicator{background:var(--gold);box-shadow:0 0 10px rgba(212,168,68,.5)}
+.quest-card.failed .quest-status-indicator{border-color:var(--ember);background:var(--ember)}
+.quest-domain{font-family:'Fira Code',monospace;font-size:.6rem;color:var(--ember);text-transform:uppercase;letter-spacing:.2em}
+.quest-name{font-family:'Cinzel',serif;font-size:.9rem;color:var(--bone);margin:4px 0}
+.quest-desc{font-size:.75rem;color:rgba(240,230,211,.6);line-height:1.4}
+.quest-deadline{font-family:'Fira Code',monospace;font-size:.68rem;color:var(--gold);opacity:.6;margin-top:5px}
+.quest-actions{display:flex;gap:6px;margin-top:6px}
+.quest-actions button{font-size:.62rem;padding:3px 8px;border-radius:3px;border:1px solid;cursor:pointer;background:transparent;font-family:'Fira Code',monospace}
+.quest-actions .btn-complete{border-color:var(--green);color:var(--green)}
+.quest-actions .btn-fail{border-color:var(--ember);color:var(--ember)}
+.quest-actions .btn-complete:hover{background:var(--green);color:var(--deep-bg)}
+.quest-actions .btn-fail:hover{background:var(--ember);color:var(--bone)}
+.boss-fight{border-color:var(--blood);background:linear-gradient(135deg,rgba(139,0,0,.15),rgba(139,0,0,.05))}
+.boss-fight .quest-domain{color:var(--blood)}
+#quest-list-empty{text-align:center;padding:20px;opacity:.4;font-style:italic;font-size:.85rem}
+/* Forge order */
+.forge-order-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(212,168,68,.1)}
+.forge-order-item .priority-num{font-family:'Cinzel',serif;font-size:1.3rem;color:var(--gold);min-width:22px;opacity:.7}
+.forge-order-item .order-text{font-size:.82rem;line-height:1.5}
+.forge-order-item:first-child .order-text{color:var(--ember);font-weight:600}
+/* Truth */
+.truth-box{background:linear-gradient(135deg,rgba(139,0,0,.25),rgba(139,0,0,.1));border:1px solid var(--blood);border-radius:6px;padding:14px;margin-top:15px;cursor:pointer;transition:border-color .3s}
+.truth-box:hover{border-color:var(--ember)}
+.truth-box .truth-label{font-family:'Cinzel',serif;font-size:.65rem;color:var(--blood);text-transform:uppercase;letter-spacing:.3em;margin-bottom:6px}
+.truth-box .truth-text{font-size:.82rem;color:var(--bone);line-height:1.6;font-style:italic}
+/* Stats bar */
+.stats-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:20px}
+.stat-card{background:rgba(26,26,46,.85);backdrop-filter:blur(15px);border:1px solid rgba(212,168,68,.3);border-radius:6px;padding:14px;text-align:center}
+.stat-card .stat-icon{font-size:1.2rem;color:var(--gold);margin-bottom:6px}
+.stat-card .stat-value{font-family:'Fira Code',monospace;font-size:1.6rem;color:var(--bone);font-weight:600}
+.stat-card .stat-label{font-size:.65rem;color:rgba(240,230,211,.5);text-transform:uppercase;letter-spacing:.08em;margin-top:3px}
+.stat-card .stat-trend{font-size:.7rem;margin-top:3px}
+.stat-card .stat-trend.down{color:var(--ember)}.stat-card .stat-trend.up{color:var(--green)}.stat-card .stat-trend.flat{color:var(--gold);opacity:.5}
+/* Sparkline */
+.sparkline{display:flex;align-items:flex-end;justify-content:center;gap:1px;height:20px;margin-top:4px}
+.sparkline .spark-bar{width:4px;background:var(--gold);border-radius:1px 1px 0 0;min-height:1px}
+/* Audio */
+.audio-section{margin-top:20px;background:rgba(26,26,46,.85);border:2px solid var(--gold);border-radius:8px;padding:18px}
+.audio-player-wrapper{display:flex;align-items:center;gap:15px}
+.play-btn{width:46px;height:46px;border-radius:50%;border:2px solid var(--gold);background:transparent;color:var(--gold);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;flex-shrink:0}
+.play-btn:hover{background:var(--gold);color:var(--deep-bg)}
+.audio-bars{flex:1;height:36px;display:flex;align-items:flex-end;gap:2px}
+.audio-bar{flex:1;background:linear-gradient(to top,var(--ember),var(--gold));border-radius:1px 1px 0 0;min-height:3px;transition:height .15s ease}
+.audio-time{font-family:'Fira Code',monospace;font-size:.75rem;color:var(--gold);opacity:.6;min-width:80px;text-align:right}
+/* Tome */
+.tome-section{margin-top:20px;background:rgba(26,26,46,.85);border:2px solid var(--gold);border-radius:8px;overflow:hidden}
+.tome-tabs{display:flex;border-bottom:2px solid var(--gold);overflow-x:auto}
+.tome-tab{padding:10px 14px;text-align:center;font-family:'Cinzel',serif;font-size:.72rem;color:rgba(240,230,211,.5);cursor:pointer;border:none;background:transparent;transition:all .3s;letter-spacing:.08em;white-space:nowrap}
+.tome-tab:hover{color:var(--bone)}
+.tome-tab.active{color:var(--gold);background:rgba(212,168,68,.1);border-bottom:2px solid var(--gold);margin-bottom:-2px}
+.tome-content{padding:20px;max-height:500px;overflow-y:auto;display:none}
+.tome-content.active{display:block}
+.tome-content h3{font-family:'Cinzel',serif;color:var(--gold);font-size:.95rem;margin:15px 0 8px}
+.tome-content h3:first-child{margin-top:0}
+.tome-content p,.tome-content li{font-size:.82rem;line-height:1.7;color:rgba(240,230,211,.8)}
+.tome-content ul{padding-left:20px}
+.tome-content::-webkit-scrollbar{width:6px}
+.tome-content::-webkit-scrollbar-track{background:var(--charcoal)}
+.tome-content::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px}
+/* Budget */
+.budget-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.75rem}
+.budget-table th{font-family:'Cinzel',serif;color:var(--gold);text-align:left;padding:6px;border-bottom:2px solid var(--gold);font-size:.7rem;letter-spacing:.08em}
+.budget-table td{padding:5px 6px;border-bottom:1px solid rgba(212,168,68,.1);font-family:'Fira Code',monospace;font-size:.72rem}
+.budget-table .expense{color:var(--ember)}.budget-table .income{color:var(--green)}
+.budget-table .delete-row{cursor:pointer;opacity:.3;transition:opacity .3s}
+.budget-table .delete-row:hover{opacity:1;color:var(--ember)}
+.budget-summary{display:flex;gap:15px;margin-top:10px;padding:12px;background:rgba(212,168,68,.05);border-radius:6px;font-family:'Fira Code',monospace;font-size:.75rem;flex-wrap:wrap}
+.budget-summary .bs-item{display:flex;flex-direction:column;gap:2px}
+.budget-summary .bs-label{font-size:.6rem;text-transform:uppercase;opacity:.5;letter-spacing:.08em}
+.budget-summary .bs-value{font-size:1rem;font-weight:600}
+/* Contact card */
+.contact-card{display:flex;justify-content:space-between;align-items:center;padding:8px;border:1px solid rgba(212,168,68,.15);border-radius:4px;margin-bottom:6px;font-size:.78rem}
+.contact-card .contact-name{font-weight:600;color:var(--bone)}
+.contact-card .contact-meta{font-family:'Fira Code',monospace;font-size:.65rem;opacity:.5}
+.contact-card .contact-delete{cursor:pointer;opacity:.3;color:var(--ember)}
+.contact-card .contact-delete:hover{opacity:1}
+/* Log entry */
+.log-entry{padding:10px;border:1px solid rgba(212,168,68,.15);border-radius:6px;margin-bottom:8px;font-size:.78rem;cursor:pointer;transition:border-color .3s}
+.log-entry:hover{border-color:var(--gold)}
+.log-entry .log-date{font-family:'Cinzel',serif;color:var(--gold);font-size:.82rem;margin-bottom:4px}
+.log-entry .log-stats{display:flex;gap:12px;flex-wrap:wrap;font-family:'Fira Code',monospace;font-size:.68rem;opacity:.7}
+.log-entry .log-avoided{margin-top:5px;font-style:italic;opacity:.6;font-size:.72rem}
+/* Modal */
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:100;justify-content:center;align-items:flex-start;padding:30px 20px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--charcoal);border:2px solid var(--gold);border-radius:8px;width:100%;max-width:620px;padding:22px;position:relative;max-height:92vh;overflow-y:auto}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.modal h2{font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;margin-bottom:18px;letter-spacing:.1em}
+.modal-close{position:absolute;top:10px;right:14px;background:none;border:none;color:var(--bone);font-size:1.2rem;cursor:pointer;opacity:.5;transition:opacity .3s}
+.modal-close:hover{opacity:1}
+/* Form */
+.form-section{margin-bottom:16px}
+.form-section-title{font-family:'Cinzel',serif;font-size:.82rem;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.form-row{display:flex;gap:10px;margin-bottom:7px;align-items:center;flex-wrap:wrap}
+.form-check{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.78rem}
+.form-check input[type="checkbox"]{accent-color:var(--gold);width:15px;height:15px;cursor:pointer}
+.form-input{background:rgba(240,230,211,.05);border:1px solid rgba(212,168,68,.3);border-radius:4px;padding:7px 10px;color:var(--bone);font-family:'Inter',sans-serif;font-size:.82rem;width:100%;transition:border-color .3s}
+.form-input:focus{outline:none;border-color:var(--gold)}
+.form-input::placeholder{color:rgba(240,230,211,.25)}
+select.form-input{cursor:pointer}
+textarea.form-input{resize:vertical;min-height:55px}
+.form-input-sm{width:80px}
+.form-input-md{width:150px}
+.sleep-rating{display:flex;gap:4px}
+.sleep-rating button{width:30px;height:30px;border-radius:4px;border:1px solid rgba(212,168,68,.3);background:transparent;color:var(--bone);cursor:pointer;font-family:'Fira Code',monospace;font-size:.82rem;transition:all .2s}
+.sleep-rating button.active{background:var(--gold);color:var(--deep-bg);border-color:var(--gold)}
+.form-submit{font-family:'Cinzel',serif;font-size:.85rem;padding:10px 28px;border:2px solid var(--gold);border-radius:6px;background:transparent;color:var(--gold);cursor:pointer;transition:all .3s;letter-spacing:.1em;width:100%;margin-top:8px}
+.form-submit:hover{background:var(--gold);color:var(--deep-bg)}
+/* Weekly review stats */
+.review-stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(212,168,68,.1);font-family:'Fira Code',monospace;font-size:.78rem}
+.review-stat .rs-label{opacity:.6}
+.review-stat .rs-value{font-weight:600}
+.review-domain{margin:12px 0 8px;font-family:'Cinzel',serif;font-size:.85rem;color:var(--gold)}
+/* Responsive */
+@media(max-width:1024px){.dashboard-grid{grid-template-columns:1fr}.stats-bar{grid-template-columns:repeat(3,1fr)}.header h1{font-size:2.5rem}}
+@media(max-width:600px){.stats-bar{grid-template-columns:repeat(2,1fr)}.header h1{font-size:1.8rem;letter-spacing:.15em}.action-bar{flex-direction:column;align-items:stretch}}
+</style>
+</head>
+<body>
+<div id="forge-loading" style="position:fixed;inset:0;background:#0f0f1a;display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="font-family:Cinzel,serif;color:#d4a844;font-size:1.5rem;letter-spacing:.3em">FORGING...</div>
+</div>
+<div class="container">
+  <header class="header">
+    <h1>THE FORGE <span id="sync-status" style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-left:8px" title="Online"></span></h1>
+    <div class="subtitle" id="header-subtitle"></div>
+    <div class="power-level" id="header-power"></div>
+    <div class="phase-banner" id="phase-banner"></div>
+  </header>
+
+  <div class="deload-warning" id="deload-warning">
+    <h3><i class="fas fa-heart-crack"></i> MANDATORY DELOAD ACTIVE</h3>
+    <p>Sleep avg below 3 and sessions below 4/week for 2+ weeks. Quests reduced. Focus on recovery.</p>
+  </div>
+
+  <div class="action-bar">
+    <button class="action-btn primary" onclick="openModal('checkin')"><i class="fas fa-fire"></i> Daily Check-in</button>
+    <button class="action-btn sunday" onclick="openModal('review')"><i class="fas fa-book-open"></i> Weekly Review</button>
+    <button class="action-btn" onclick="openModal('quest')"><i class="fas fa-scroll"></i> New Quest</button>
+    <button class="action-btn" onclick="openModal('expense')"><i class="fas fa-coins"></i> Expense</button>
+    <button class="action-btn" onclick="openModal('income')"><i class="fas fa-gem"></i> Income</button>
+    <button class="action-btn" onclick="openModal('contact')"><i class="fas fa-user-plus"></i> Contact</button>
+    <button class="action-btn" onclick="openModal('level')"><i class="fas fa-arrow-up"></i> Level</button>
+    <button class="action-btn" onclick="exportState()"><i class="fas fa-download"></i> Export</button>
+    <button class="action-btn" onclick="document.getElementById('import-file').click()"><i class="fas fa-upload"></i> Import</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importState(event)">
+  </div>
+
+  <!-- DOMAIN NAVIGATION -->
+  <div class="domain-nav" style="display:flex;gap:8px;justify-content:center;margin-bottom:20px;flex-wrap:wrap">
+    <a href="iron.html" class="domain-nav-link" style="text-decoration:none;font-family:'Cinzel',serif;font-size:.72rem;padding:8px 16px;border:2px solid var(--green);border-radius:6px;color:var(--green);display:flex;align-items:center;gap:6px;transition:all .3s;letter-spacing:.08em"><i class="fas fa-dumbbell"></i> IRON</a>
+    <a href="anvil.html" class="domain-nav-link" style="text-decoration:none;font-family:'Cinzel',serif;font-size:.72rem;padding:8px 16px;border:2px solid var(--ember);border-radius:6px;color:var(--ember);display:flex;align-items:center;gap:6px;transition:all .3s;letter-spacing:.08em"><i class="fas fa-hammer"></i> ANVIL</a>
+    <a href="vault.html" class="domain-nav-link" style="text-decoration:none;font-family:'Cinzel',serif;font-size:.72rem;padding:8px 16px;border:2px solid var(--ember);border-radius:6px;color:var(--ember);display:flex;align-items:center;gap:6px;transition:all .3s;letter-spacing:.08em"><i class="fas fa-vault"></i> VAULT</a>
+    <a href="guild.html" class="domain-nav-link" style="text-decoration:none;font-family:'Cinzel',serif;font-size:.72rem;padding:8px 16px;border:2px solid var(--ember);border-radius:6px;color:var(--ember);display:flex;align-items:center;gap:6px;transition:all .3s;letter-spacing:.08em"><i class="fas fa-users"></i> GUILD</a>
+    <a href="library.html" class="domain-nav-link" style="text-decoration:none;font-family:'Cinzel',serif;font-size:.72rem;padding:8px 16px;border:2px solid var(--ember);border-radius:6px;color:var(--ember);display:flex;align-items:center;gap:6px;transition:all .3s;letter-spacing:.08em"><i class="fas fa-book"></i> LIBRARY</a>
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- LEFT: CHARACTER SHEET -->
+    <div class="panel">
+      <div class="panel-title"><i class="fas fa-shield-halved"></i> CHARACTER SHEET</div>
+      <div class="radar-container"><canvas id="radarChart"></canvas></div>
+      <div class="domain-levels" id="domain-levels-list"></div>
+      <div id="levelup-suggestions"></div>
+    </div>
+    <!-- CENTER: QUEST BOARD -->
+    <div class="panel">
+      <div class="panel-title"><i class="fas fa-scroll"></i> QUEST BOARD <span class="panel-action" onclick="openModal('quest')"><i class="fas fa-plus"></i> Add</span></div>
+      <div id="quest-list"></div>
+    </div>
+    <!-- RIGHT: FORGE ORDER + TRUTH -->
+    <div class="panel">
+      <div class="panel-title"><i class="fas fa-fire"></i> TODAY'S FORGE ORDER</div>
+      <div id="forge-order-list"></div>
+      <div class="truth-box" onclick="openModal('truth')">
+        <div class="truth-label"><i class="fas fa-skull-crossbones"></i> The Uncomfortable Truth</div>
+        <div class="truth-text" id="truth-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-bar" id="stats-bar"></div>
+
+  <!-- AUDIO -->
+  <div class="audio-section">
+    <div class="panel-title"><i class="fas fa-microphone-lines"></i> FORGE MASTER AUDIO BRIEFING</div>
+    <div class="audio-player-wrapper">
+      <button class="play-btn" onclick="toggleAudio()"><i class="fas fa-play" id="playIcon"></i></button>
+      <div class="audio-bars" id="audioBars"></div>
+      <div class="audio-time" id="audioTime">00:00 / --:--</div>
+    </div>
+    <audio id="forgeAudio" src="audio_briefing.mp3"></audio>
+  </div>
+
+  <!-- TOME -->
+  <div class="tome-section">
+    <div class="tome-tabs">
+      <button class="tome-tab active" onclick="switchTab(this,'logs')">Daily Logs</button>
+      <button class="tome-tab" onclick="switchTab(this,'budget')">Budget</button>
+      <button class="tome-tab" onclick="switchTab(this,'contacts')">Contacts</button>
+      <button class="tome-tab" onclick="switchTab(this,'avoidance')">Avoidance</button>
+      <button class="tome-tab" onclick="switchTab(this,'history')">Quest History</button>
+      <button class="tome-tab" onclick="switchTab(this,'reviews')">Weekly Reviews</button>
+    </div>
+    <div class="tome-content active" id="tab-logs"></div>
+    <div class="tome-content" id="tab-budget"></div>
+    <div class="tome-content" id="tab-contacts"></div>
+    <div class="tome-content" id="tab-avoidance"></div>
+    <div class="tome-content" id="tab-history"></div>
+    <div class="tome-content" id="tab-reviews"></div>
+  </div>
+</div>
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- DAILY CHECK-IN -->
+<div class="modal-overlay" id="modal-checkin">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('checkin')">&times;</button>
+    <h2><i class="fas fa-fire"></i> Daily Check-in</h2>
+    <form id="checkin-form" onsubmit="submitCheckin(event)">
+      <div class="form-row"><label style="font-size:.78rem;opacity:.6">Date:</label><input type="date" class="form-input form-input-md" id="ci-date" onchange="prefillCheckin()"></div>
+      <div class="form-section">
+        <div class="form-section-title"><i class="fas fa-dumbbell"></i> IRON</div>
+        <div class="form-row">
+          <label class="form-check"><input type="checkbox" id="ci-gym"> Gym</label>
+          <label class="form-check"><input type="checkbox" id="ci-boxing"> Boxing</label>
+          <label class="form-check"><input type="checkbox" id="ci-swimming"> Swimming</label>
+          <label class="form-check"><input type="checkbox" id="ci-rest"> Rest (planned)</label>
+        </div>
+        <div class="form-row"><label class="form-check"><input type="checkbox" id="ci-overload"> Progressive overload logged</label></div>
+        <div class="form-row"><label style="font-size:.78rem">Sleep:</label><div class="sleep-rating" id="ci-sleep"></div></div>
+        <div class="form-row"><input type="text" class="form-input" id="ci-injury" placeholder="Injury/pain (blank if none)"></div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title"><i class="fas fa-hammer"></i> ANVIL</div>
+        <div class="form-row"><label class="form-check"><input type="checkbox" id="ci-internship"> Internship/project task</label></div>
+        <div class="form-row"><label class="form-check"><input type="checkbox" id="ci-neurgait"> NeurGait work</label></div>
+        <div class="form-row"><label style="font-size:.78rem">Cold outreach sent:</label><input type="number" class="form-input form-input-sm" id="ci-outreach-count" value="0" min="0"></div>
+        <div class="form-row"><label class="form-check"><input type="checkbox" id="ci-gcp"> GCP/training module</label></div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title"><i class="fas fa-vault"></i> VAULT</div>
+        <div class="form-row"><label class="form-check"><input type="checkbox" id="ci-fin-literacy"> Financial literacy task</label></div>
+        <div class="form-row"><label style="font-size:.78rem">Spent today (CHF):</label><input type="number" class="form-input form-input-sm" id="ci-spent" value="0" min="0" step="0.01"></div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title"><i class="fas fa-users"></i> GUILD</div>
+        <div class="form-row"><label class="form-check"><input type="checkbox" id="ci-guild-outreach"> Outreach sent</label></div>
+        <div class="form-row"><label class="form-check"><input type="checkbox" id="ci-relationship"> Relationship-building action</label></div>
+        <div class="form-row"><input type="text" class="form-input" id="ci-new-contact" placeholder="New contact name (blank if none)"></div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title"><i class="fas fa-book"></i> LIBRARY</div>
+        <div class="form-row"><label style="font-size:.78rem">Deep work hours:</label><input type="number" class="form-input form-input-sm" id="ci-deep-work" value="0" min="0" step="0.5"></div>
+        <div class="form-row"><input type="text" class="form-input" id="ci-paper" placeholder="Paper/chapter read (blank if none)"></div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title"><i class="fas fa-skull-crossbones"></i> What did I avoid today?</div>
+        <textarea class="form-input" id="ci-avoided" placeholder="Be honest. This is the most important field."></textarea>
+      </div>
+      <button type="submit" class="form-submit">LOG CHECK-IN</button>
+    </form>
+  </div>
+</div>
+
+<!-- WEEKLY REVIEW -->
+<div class="modal-overlay" id="modal-review">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('review')">&times;</button>
+    <h2><i class="fas fa-book-open"></i> Weekly Review</h2>
+    <div id="review-stats"></div>
+    <form onsubmit="submitReview(event)">
+      <div class="review-domain">IRON Review</div>
+      <textarea class="form-input" id="rv-iron" placeholder="What went well? Next physical target?"></textarea>
+      <div class="review-domain">ANVIL Review</div>
+      <textarea class="form-input" id="rv-anvil" placeholder="What shipped? What's blocked? Rate internship week 1-5."></textarea>
+      <div class="review-domain">VAULT Review</div>
+      <textarea class="form-input" id="rv-vault" placeholder="Biggest expense? One thing to cut or optimize."></textarea>
+      <div class="review-domain">GUILD Review</div>
+      <textarea class="form-input" id="rv-guild" placeholder="Who did you talk to? Who should you talk to next week? Still avoiding outreach?"></textarea>
+      <div class="review-domain">LIBRARY Review</div>
+      <textarea class="form-input" id="rv-library" placeholder="What changed how you think? Biggest knowledge gap remaining?"></textarea>
+      <button type="submit" class="form-submit">SAVE WEEKLY REVIEW</button>
+    </form>
+  </div>
+</div>
+
+<!-- NEW QUEST -->
+<div class="modal-overlay" id="modal-quest">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('quest')">&times;</button>
+    <h2><i class="fas fa-scroll"></i> New Quest</h2>
+    <form onsubmit="submitQuest(event)">
+      <div class="form-row"><input type="text" class="form-input" id="q-name" placeholder="Quest name" required></div>
+      <div class="form-row">
+        <select class="form-input form-input-md" id="q-domain"><option value="iron">IRON</option><option value="anvil">ANVIL</option><option value="vault">VAULT</option><option value="guild" selected>GUILD</option><option value="library">LIBRARY</option></select>
+        <input type="date" class="form-input form-input-md" id="q-deadline">
+      </div>
+      <div class="form-row"><textarea class="form-input" id="q-desc" placeholder="Quest description / deliverable"></textarea></div>
+      <div class="form-row">
+        <select class="form-input form-input-md" id="q-difficulty"><option value="daily">Daily (10 XP)</option><option value="weekly" selected>Weekly (25 XP)</option><option value="boss">Boss (50 XP)</option></select>
+        <label class="form-check"><input type="checkbox" id="q-boss"> Boss Fight</label>
+      </div>
+      <button type="submit" class="form-submit">CREATE QUEST</button>
+    </form>
+  </div>
+</div>
+
+<!-- EXPENSE -->
+<div class="modal-overlay" id="modal-expense">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('expense')">&times;</button>
+    <h2><i class="fas fa-coins"></i> Log Expense</h2>
+    <form onsubmit="submitExpense(event)">
+      <div class="form-row">
+        <input type="date" class="form-input form-input-md" id="exp-date">
+        <input type="number" class="form-input form-input-sm" id="exp-amount" placeholder="CHF" required min="0" step="0.01">
+      </div>
+      <div class="form-row">
+        <select class="form-input form-input-md" id="exp-category"><option value="food">Food</option><option value="transport">Transport</option><option value="rent">Rent</option><option value="insurance">Insurance</option><option value="subscription">Subscription</option><option value="social">Social</option><option value="gear">Gear</option><option value="other">Other</option></select>
+        <input type="text" class="form-input" id="exp-note" placeholder="Note (optional)">
+      </div>
+      <button type="submit" class="form-submit">LOG EXPENSE</button>
+    </form>
+  </div>
+</div>
+
+<!-- INCOME -->
+<div class="modal-overlay" id="modal-income">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('income')">&times;</button>
+    <h2><i class="fas fa-gem"></i> Log Income</h2>
+    <form onsubmit="submitIncome(event)">
+      <div class="form-row">
+        <input type="date" class="form-input form-input-md" id="inc-date">
+        <input type="number" class="form-input form-input-sm" id="inc-amount" placeholder="CHF" required min="0" step="0.01">
+      </div>
+      <div class="form-row">
+        <select class="form-input form-input-md" id="inc-source"><option value="parents">Parents</option><option value="internship">Internship</option><option value="swimming-lessons">Swimming Lessons</option><option value="freelance">Freelance</option><option value="other">Other</option></select>
+        <input type="text" class="form-input" id="inc-note" placeholder="Note (optional)">
+      </div>
+      <button type="submit" class="form-submit">LOG INCOME</button>
+    </form>
+  </div>
+</div>
+
+<!-- CONTACT -->
+<div class="modal-overlay" id="modal-contact">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('contact')">&times;</button>
+    <h2><i class="fas fa-user-plus"></i> Add Contact</h2>
+    <form onsubmit="submitContact(event)">
+      <div class="form-row"><input type="text" class="form-input" id="ct-name" placeholder="Name" required></div>
+      <div class="form-row"><input type="text" class="form-input" id="ct-org" placeholder="Organization (e.g., ONWARD Medical, Micera Lab)"></div>
+      <div class="form-row">
+        <select class="form-input form-input-md" id="ct-type"><option value="thesis-target">Thesis Target</option><option value="colleague">Colleague</option><option value="supervisor">Supervisor</option><option value="professor">Professor</option><option value="recruiter">Recruiter</option><option value="other">Other</option></select>
+        <select class="form-input form-input-md" id="ct-status"><option value="identified">Identified</option><option value="contacted">Contacted</option><option value="responded">Responded</option><option value="meeting-held">Meeting Held</option><option value="warm">Warm Lead</option></select>
+      </div>
+      <div class="form-row"><input type="text" class="form-input" id="ct-note" placeholder="Notes (how you met, what to follow up on)"></div>
+      <button type="submit" class="form-submit">ADD CONTACT</button>
+    </form>
+  </div>
+</div>
+
+<!-- LEVEL -->
+<div class="modal-overlay" id="modal-level">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('level')">&times;</button>
+    <h2><i class="fas fa-arrow-up"></i> Update Domain Level</h2>
+    <form onsubmit="submitLevel(event)">
+      <div class="form-row">
+        <select class="form-input form-input-md" id="lvl-domain"><option value="iron">IRON</option><option value="anvil">ANVIL</option><option value="vault">VAULT</option><option value="guild">GUILD</option><option value="library">LIBRARY</option></select>
+        <select class="form-input form-input-md" id="lvl-level"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+      </div>
+      <div id="lvl-milestone-hint" style="font-size:.75rem;opacity:.6;margin-top:6px"></div>
+      <button type="submit" class="form-submit">UPDATE LEVEL</button>
+    </form>
+  </div>
+</div>
+
+<!-- TRUTH -->
+<div class="modal-overlay" id="modal-truth">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('truth')">&times;</button>
+    <h2><i class="fas fa-skull-crossbones"></i> The Uncomfortable Truth</h2>
+    <form onsubmit="submitTruth(event)">
+      <textarea class="form-input" id="truth-edit" rows="3" placeholder="One sentence you need to hear."></textarea>
+      <button type="submit" class="form-submit">UPDATE</button>
+    </form>
+  </div>
+</div>
+
+<script src="forge-shared.js"></script>
+<script src="data-layer.js"></script>
+<script>
+// ========================================================================
+// THE FORGE — Interactive Life OS Engine
+// ========================================================================
+
+// ==================== CONSTANTS ====================
+const PHASES = [
+  { name:'Pre-Internship Sprint', start:'2026-03-01', end:'2026-03-19', weights:{anvil:40,library:30,vault:20,guild:10} },
+  { name:'Internship Ramp-Up',   start:'2026-03-20', end:'2026-04-19', weights:{anvil:40,guild:30,library:15,vault:15} },
+  { name:'Clinical Trial Active', start:'2026-04-20', end:'2026-06-30', weights:{anvil:35,guild:35,library:15,vault:15} },
+  { name:'Thesis Securing',      start:'2026-07-01', end:'2026-09-20', weights:{guild:40,anvil:30,library:15,vault:15} }
+];
+
+// ==================== UTILITIES ====================
+function fmtTime(s){if(isNaN(s))return'--:--';return`${Math.floor(s/60).toString().padStart(2,'0')}:${Math.floor(s%60).toString().padStart(2,'0')}`}
+
+// ==================== COMPUTED ====================
+function currentPhase(){
+  const t=today();
+  for(const p of PHASES) if(t>=p.start&&t<=p.end) return p;
+  return PHASES[PHASES.length-1];
+}
+
+function getWeekLogs(weekOffset=0){
+  const now=new Date(),dow=now.getDay()||7,mon=new Date(now);
+  mon.setDate(now.getDate()-dow+1-(weekOffset*7));
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+  const s=mon.toISOString().slice(0,10),e=sun.toISOString().slice(0,10);
+  return S.dailyLogs.filter(l=>l.date>=s&&l.date<=e);
+}
+
+function getMonthTx(type){
+  const ym=today().slice(0,7);
+  return (type==='expense'?S.expenses:S.income).filter(t=>t.date.startsWith(ym));
+}
+
+function weeklyStats(logs){
+  const s={sessions:0,outreach:0,deepWork:0,spent:0,sleepSum:0,days:logs.length,overloadDays:0,gcpDays:0,finLitDays:0,guildDays:0,neurgaitDays:0,internDays:0};
+  logs.forEach(l=>{
+    s.sessions+=(l.gym?1:0)+(l.boxing?1:0)+(l.swimming?1:0);
+    s.outreach+=(l.outreachCount||0);
+    s.deepWork+=(l.deepWork||0);
+    s.spent+=(l.spent||0);
+    s.sleepSum+=(l.sleep||0);
+    if(l.overload)s.overloadDays++;
+    if(l.gcp)s.gcpDays++;
+    if(l.finLiteracy)s.finLitDays++;
+    if(l.guildOutreach||(l.outreachCount||0)>0)s.guildDays++;
+    if(l.neurgait)s.neurgaitDays++;
+    if(l.internship)s.internDays++;
+  });
+  s.sleepAvg=s.days?(s.sleepSum/s.days):0;
+  return s;
+}
+
+function monthlyBudget(){
+  const ex=getMonthTx('expense'),inc=getMonthTx('income');
+  const te=ex.reduce((a,e)=>a+e.amount,0),ti=inc.reduce((a,e)=>a+e.amount,0);
+  const sav=ti-te,rate=ti>0?((sav/ti)*100):0;
+  // Burn rate: total expenses / days elapsed this month
+  const d=new Date(),dayOfMonth=d.getDate();
+  const dailyBurn=dayOfMonth>0?te/dayOfMonth:0;
+  const projectedMonthly=dailyBurn*new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+  return {totalExp:te,totalInc:ti,savings:sav,rate:Math.round(rate),expenses:ex,incomes:inc,dailyBurn,projectedMonthly};
+}
+
+function outreachStreak(){
+  const sorted=[...S.dailyLogs].sort((a,b)=>b.date.localeCompare(a.date));
+  let s=0; for(const l of sorted){if((l.outreachCount||0)===0&&!l.guildOutreach)s++;else break;} return s;
+}
+
+function domainStreak(key){
+  // Returns last 7 days hit/miss for a domain
+  const sorted=[...S.dailyLogs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);
+  return sorted.map(l=>{
+    switch(key){
+      case 'iron': return l.gym||l.boxing||l.swimming||l.rest;
+      case 'anvil': return l.internship||l.neurgait||(l.outreachCount||0)>0||l.gcp;
+      case 'vault': return l.finLiteracy||(l.spent>0); // tracking = active
+      case 'guild': return l.guildOutreach||(l.outreachCount||0)>0||l.relationship;
+      case 'library': return (l.deepWork||0)>0||!!l.paper;
+    }
+  });
+}
+
+function checkBurnout(){
+  // 2 consecutive weeks: sleep < 3 avg AND sessions < 4/week
+  const w1=weeklyStats(getWeekLogs(0)),w2=weeklyStats(getWeekLogs(1));
+  const burn1=w1.days>=3&&w1.sleepAvg<3&&w1.sessions<4;
+  const burn2=w2.days>=3&&w2.sleepAvg<3&&w2.sessions<4;
+  return burn1&&burn2;
+}
+
+function weekNumber(){return Math.max(1,Math.ceil((new Date()-new Date(S.startDate))/(7*86400000)))}
+
+// Level-up suggestions from data
+function levelUpSuggestions(){
+  const hints=[];
+  const logs=S.dailyLogs;
+  const totalOutreach=logs.reduce((a,l)=>a+(l.outreachCount||0),0);
+  const totalContacts=S.contacts.length;
+  const responded=S.contacts.filter(c=>c.status==='responded'||c.status==='meeting-held'||c.status==='warm').length;
+  const budget=monthlyBudget();
+
+  // VAULT Level 1: know burn rate
+  if(S.domains.vault===0&&budget.totalExp>0&&S.expenses.length>=7) hints.push({domain:'vault',level:1,reason:'You have 7+ expense entries. Burn rate is known.'});
+  // GUILD Level 1: 1st email sent
+  if(S.domains.guild===0&&totalOutreach>0) hints.push({domain:'guild',level:1,reason:'First cold outreach sent!'});
+  // GUILD Level 2: 10 outreach + 1 response
+  if(S.domains.guild===1&&totalOutreach>=10&&responded>=1) hints.push({domain:'guild',level:2,reason:'10+ outreach sent and '+responded+' response(s).'});
+  return hints;
+}
+
+// Historical weekly data for sparklines
+function weeklyHistory(metric,weeks=8){
+  const data=[];
+  for(let i=weeks-1;i>=0;i--){
+    const s=weeklyStats(getWeekLogs(i));
+    switch(metric){
+      case 'sessions':data.push(s.sessions);break;
+      case 'outreach':data.push(s.outreach);break;
+      case 'deepWork':data.push(s.deepWork);break;
+      case 'sleep':data.push(s.sleepAvg);break;
+    }
+  }
+  return data;
+}
+
+function sparklineHTML(data){
+  if(!data.length||data.every(v=>v===0))return'';
+  const max=Math.max(...data,1);
+  return '<div class="sparkline">'+data.map(v=>`<div class="spark-bar" style="height:${Math.max(1,(v/max)*18)}px"></div>`).join('')+'</div>';
+}
+
+// ==================== RENDERING ====================
+let radarChart=null;
+
+function renderAll(){
+  renderHeader();renderRadar();renderDomainLevels();renderQuests();renderForgeOrder();
+  renderTruth();renderStatsBar();renderLogsTab();renderBudgetTab();renderContactsTab();
+  renderAvoidanceTab();renderQuestHistory();renderReviewsTab();checkDeload();
+}
+
+function renderHeader(){
+  const wk=weekNumber(),t=today(),ol=overallLevel(),ph=currentPhase();
+  document.getElementById('header-subtitle').textContent=`FORGE INITIATE \u2014 ${t} \u2014 WEEK ${wk}`;
+  const totalXP=S.quests.filter(q=>q.status==='completed').reduce((a,q)=>a+(q.xp||25),0);
+  document.getElementById('header-power').textContent=`POWER LEVEL ${ol} \u2014 ${OVERALL_TITLES[Math.min(ol,5)]} \u2014 ${totalXP} XP`;
+  document.getElementById('phase-banner').innerHTML=`PHASE: <span class="phase-name">${ph.name}</span> \u2014 Focus: ${Object.entries(ph.weights).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k.toUpperCase()} ${v}%`).join(' / ')}`;
+}
+
+function checkDeload(){document.getElementById('deload-warning').classList.toggle('active',checkBurnout())}
+
+function renderRadar(){
+  const data=[S.domains.iron,S.domains.anvil,S.domains.vault,S.domains.guild,S.domains.library];
+  if(radarChart){radarChart.data.datasets[0].data=data;radarChart.update();return;}
+  radarChart=new Chart(document.getElementById('radarChart').getContext('2d'),{
+    type:'radar',data:{labels:['IRON','ANVIL','VAULT','GUILD','LIBRARY'],datasets:[{data,backgroundColor:'rgba(233,69,96,.15)',borderColor:'#d4a844',borderWidth:2,
+      pointBackgroundColor:ctx=>ctx.dataset.data[ctx.dataIndex]===0?'#e94560':'#d4a844',
+      pointBorderColor:ctx=>ctx.dataset.data[ctx.dataIndex]===0?'#e94560':'#d4a844',
+      pointRadius:5,pointHoverRadius:7}]},
+    options:{responsive:true,maintainAspectRatio:true,scales:{r:{beginAtZero:true,max:5,
+      ticks:{stepSize:1,color:'rgba(240,230,211,.3)',backdropColor:'transparent',font:{family:"'Fira Code',monospace",size:10}},
+      grid:{color:'rgba(212,168,68,.15)'},angleLines:{color:'rgba(212,168,68,.2)'},
+      pointLabels:{color:'#d4a844',font:{family:"'Cinzel',serif",size:11,weight:700}}}},
+      plugins:{legend:{display:false}}}
+  });
+}
+
+function renderDomainLevels(){
+  const el=document.getElementById('domain-levels-list');
+  const hints=levelUpSuggestions();
+  let html='';
+  for(const[key,meta]of Object.entries(DOMAIN_META)){
+    const lvl=S.domains[key],deg=lvl===0?' degraded':'',clr=lvl===0?'var(--ember)':meta.color;
+    const streak=domainStreak(key);
+    const streakDots=streak.map(hit=>`<div class="streak-dot ${hit?'hit':'miss'}"></div>`).join('');
+    const hint=hints.find(h=>h.domain===key);
+    html+=`<div class="domain-row${deg}"><a href="${key}.html" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:6px" class="domain-name"><i class="fas ${meta.icon}" style="color:${clr}"></i> ${key.toUpperCase()}</a><span class="domain-level">LVL ${lvl} \u2014 ${meta.titles[lvl]}</span></div>`;
+    html+=`<div style="padding:0 0 4px;display:flex;align-items:center;gap:6px"><div class="streak-bar">${streakDots}</div><span style="font-size:.6rem;opacity:.4;font-family:'Fira Code',monospace">${streak.filter(Boolean).length}/${streak.length}d</span></div>`;
+    if(hint) html+=`<div class="levelup-hint" onclick="S.domains['${key}']=${hint.level};dbUpsertProfile({domains:S.domains});cacheState();renderAll()"><i class="fas fa-arrow-up"></i> Level up available: ${esc(hint.reason)}</div>`;
+  }
+  el.innerHTML=html;
+}
+
+function renderQuests(){
+  const el=document.getElementById('quest-list');
+  const active=S.quests.filter(q=>q.status==='active');
+  if(!active.length){el.innerHTML='<div id="quest-list-empty">No active quests. Create one.</div>';return;}
+  el.innerHTML=active.map(q=>{
+    const cls=q.boss?'quest-card boss-fight':'quest-card';
+    const dl=q.deadline?Math.max(0,Math.ceil((new Date(q.deadline)-new Date())/86400000)):'?';
+    const esc_tag=q.failCount>1?'[ESCALATED x'+q.failCount+'] ':'';
+    return `<div class="${cls}"><div class="quest-status-indicator"></div>
+      <div class="quest-domain">${q.boss?'BOSS FIGHT \u2014 ':''}${q.domain.toUpperCase()}</div>
+      <div class="quest-name">${esc_tag}${esc(q.name)}</div>
+      <div class="quest-desc">${esc(q.desc||q.criteria||'')}</div>
+      <div class="quest-deadline"><i class="fas fa-clock"></i> ${q.deadline||'No deadline'} \u2014 ${dl} days left${q.xp?' \u00b7 '+q.xp+' XP':''}${q.difficulty?' \u00b7 '+q.difficulty:''}</div>
+      <div class="quest-actions">
+        <button class="btn-complete" onclick="completeQuest('${q.id}')"><i class="fas fa-check"></i> Complete</button>
+        <button class="btn-fail" onclick="failQuest('${q.id}')"><i class="fas fa-xmark"></i> Fail</button>
+      </div></div>`;
+  }).join('');
+}
+
+function renderForgeOrder(){
+  const el=document.getElementById('forge-order-list');
+  const logs=getWeekLogs(),stats=weeklyStats(logs),streak=outreachStreak(),ph=currentPhase(),budget=monthlyBudget();
+  const orders=[];
+  const deload=checkBurnout();
+
+  if(deload){
+    orders.push('DELOAD ACTIVE: Sleep and recovery only. Skip non-essential quests.');
+  } else {
+    // Phase-aware priorities
+    const topDomain=Object.entries(ph.weights).sort((a,b)=>b[1]-a[1])[0][0];
+    if(streak>=3) orders.push(`Send a cold email first. ${streak}-day zero streak. This is your #1 blocker.`);
+    else if(topDomain==='guild'&&stats.outreach===0) orders.push('GUILD is your phase focus. Send outreach today.');
+
+    const urgent=S.quests.filter(q=>q.status==='active'&&q.deadline).filter(q=>Math.ceil((new Date(q.deadline)-new Date())/86400000)<=3);
+    urgent.forEach(q=>orders.push(`URGENT: "${q.name}" due in ${Math.max(0,Math.ceil((new Date(q.deadline)-new Date())/86400000))} day(s).`));
+
+    if(!logs.find(l=>l.date===today())) orders.push('Complete your daily check-in tonight.');
+    if(budget.totalExp===0&&S.expenses.length===0) orders.push('Zero expense data. Start tracking every franc.');
+    else if(budget.rate<10&&budget.totalExp>0) orders.push(`Savings rate: ${budget.rate}%. Target: 10%. Cut one expense.`);
+
+    if(stats.sleepAvg>0&&stats.sleepAvg<3) orders.push(`Sleep avg this week: ${stats.sleepAvg.toFixed(1)}/5. Burnout risk.`);
+  }
+
+  if(!orders.length) orders.push('All systems nominal. Maintain discipline.');
+  el.innerHTML=orders.slice(0,4).map((o,i)=>`<div class="forge-order-item"><span class="priority-num">${i+1}</span><span class="order-text">${esc(o)}</span></div>`).join('');
+}
+
+function renderTruth(){document.getElementById('truth-text').textContent='"'+S.truth+'"'}
+
+function renderStatsBar(){
+  const logs=getWeekLogs(),prev=getWeekLogs(1),s=weeklyStats(logs),ps=weeklyStats(prev),budget=monthlyBudget(),streak=outreachStreak();
+  function trend(c,p){if(!prev.length)return{cls:'flat',txt:'\u2192 Baseline'};if(c>p)return{cls:'up',txt:'\u2191 vs last wk'};if(c<p)return{cls:'down',txt:'\u2193 vs last wk'};return{cls:'flat',txt:'\u2192 Same'};}
+  const items=[
+    {icon:'fa-dumbbell',value:s.sessions,label:'Sessions',spark:weeklyHistory('sessions'),...trend(s.sessions,ps.sessions)},
+    {icon:'fa-envelope',value:s.outreach,label:'Outreach',spark:weeklyHistory('outreach'),cls:s.outreach===0?'down':'up',txt:streak>0?streak+'-day zero':'Active!',valColor:s.outreach===0?'var(--ember)':''},
+    {icon:'fa-brain',value:s.deepWork,label:'Deep Work Hrs',spark:weeklyHistory('deepWork'),...trend(s.deepWork,ps.deepWork)},
+    {icon:'fa-bed',value:s.sleepAvg?s.sleepAvg.toFixed(1):'--',label:'Sleep Avg',spark:weeklyHistory('sleep'),cls:s.sleepAvg<3?'down':s.sleepAvg>=4?'up':'flat',txt:s.sleepAvg<3?'Burnout risk':s.sleepAvg>=4?'Good':'OK',valColor:s.sleepAvg<3?'var(--ember)':''},
+    {icon:'fa-coins',value:Math.round(budget.totalExp),label:'CHF Spent',cls:'flat',txt:`Burn: ${budget.dailyBurn.toFixed(0)}/day`,valColor:budget.totalExp>budget.totalInc?'var(--ember)':''},
+    {icon:'fa-piggy-bank',value:budget.rate+'%',label:'Savings Rate',cls:budget.rate<10?'down':'up',txt:budget.rate<10?'Below 10%':'On track',valColor:budget.rate<10?'var(--ember)':'var(--green)'}
+  ];
+  document.getElementById('stats-bar').innerHTML=items.map(it=>`<div class="stat-card">
+    <div class="stat-icon"><i class="fas ${it.icon}"></i></div>
+    <div class="stat-value" ${it.valColor?`style="color:${it.valColor}"`:''}>${it.value}</div>
+    <div class="stat-label">${it.label}</div>
+    <div class="stat-trend ${it.cls}">${it.txt}</div>
+    ${it.spark?sparklineHTML(it.spark):''}
+  </div>`).join('');
+}
+
+function renderLogsTab(){
+  const el=document.getElementById('tab-logs'),sorted=[...S.dailyLogs].sort((a,b)=>b.date.localeCompare(a.date));
+  if(!sorted.length){el.innerHTML='<p style="opacity:.4;text-align:center;padding:20px">No logs yet. Hit "Daily Check-in".</p>';return;}
+  el.innerHTML=sorted.map(l=>{
+    const sess=[l.gym&&'Gym',l.boxing&&'Boxing',l.swimming&&'Swimming'].filter(Boolean).join(', ')||'Rest';
+    return `<div class="log-entry" onclick="editLog('${l.date}')">
+      <div class="log-date">${l.date}<span style="float:right;cursor:pointer;opacity:.3;font-size:.65rem" onclick="event.stopPropagation();deleteLog('${l.date}')">&times; delete</span></div>
+      <div class="log-stats"><span><i class="fas fa-dumbbell"></i> ${sess}</span><span>Sleep:${l.sleep}/5</span><span>Outreach:${l.outreachCount||0}</span><span>Deep:${l.deepWork||0}h</span><span>${l.spent||0}CHF</span></div>
+      ${l.avoided?`<div class="log-avoided">"${esc(l.avoided)}"</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderBudgetTab(){
+  const el=document.getElementById('tab-budget'),b=monthlyBudget();
+  const allTx=[...b.expenses.map(e=>({...e,type:'expense'})),...b.incomes.map(i=>({...i,type:'income'}))].sort((a,x)=>x.date.localeCompare(a.date));
+  let html=`<div class="budget-summary">
+    <div class="bs-item"><span class="bs-label">Income</span><span class="bs-value" style="color:var(--green)">${b.totalInc.toFixed(0)}</span></div>
+    <div class="bs-item"><span class="bs-label">Expenses</span><span class="bs-value" style="color:var(--ember)">${b.totalExp.toFixed(0)}</span></div>
+    <div class="bs-item"><span class="bs-label">Net</span><span class="bs-value" style="color:${b.savings>=0?'var(--green)':'var(--ember)'}">${b.savings.toFixed(0)}</span></div>
+    <div class="bs-item"><span class="bs-label">Savings %</span><span class="bs-value" style="color:${b.rate>=10?'var(--green)':'var(--ember)'}">${b.rate}%</span></div>
+    <div class="bs-item"><span class="bs-label">Daily Burn</span><span class="bs-value">${b.dailyBurn.toFixed(1)}</span></div>
+    <div class="bs-item"><span class="bs-label">Projected</span><span class="bs-value">${b.projectedMonthly.toFixed(0)}</span></div>
+  </div>`;
+  if(allTx.length){
+    const cats={};b.expenses.forEach(e=>{cats[e.category]=(cats[e.category]||0)+e.amount;});
+    if(Object.keys(cats).length){
+      html+='<h3>Breakdown</h3><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">';
+      for(const[c,a]of Object.entries(cats).sort((a,b)=>b[1]-a[1])){const p=b.totalExp>0?((a/b.totalExp)*100).toFixed(0):0;html+=`<div style="font-family:'Fira Code',monospace;font-size:.7rem;padding:3px 6px;border:1px solid rgba(212,168,68,.2);border-radius:3px">${c}:${a.toFixed(0)}(${p}%)</div>`;}
+      html+='</div>';
+    }
+    html+='<h3>Transactions</h3><table class="budget-table"><thead><tr><th>Date</th><th></th><th>CHF</th><th>Cat</th><th>Note</th><th></th></tr></thead><tbody>';
+    html+=allTx.map(t=>`<tr><td>${t.date}</td><td class="${t.type}">${t.type==='expense'?'-':'+'}</td><td class="${t.type}">${t.amount.toFixed(2)}</td><td>${t.category||t.source||''}</td><td>${esc(t.note||'')}</td><td class="delete-row" onclick="deleteTx('${t.id}','${t.type}')">&times;</td></tr>`).join('');
+    html+='</tbody></table>';
+  } else html+='<p style="opacity:.4;text-align:center;padding:20px;margin-top:12px">No transactions this month.</p>';
+  el.innerHTML=html;
+}
+
+function renderContactsTab(){
+  const el=document.getElementById('tab-contacts');
+  if(!S.contacts.length){el.innerHTML='<p style="opacity:.4;text-align:center;padding:20px">No contacts yet. Start building your network.</p>';return;}
+  const sorted=[...S.contacts].sort((a,b)=>{const order={warm:0,'meeting-held':1,responded:2,contacted:3,identified:4};return(order[a.status]||5)-(order[b.status]||5);});
+  const statusColors={identified:'var(--bone)',contacted:'var(--gold)',responded:'var(--green)','meeting-held':'var(--green)',warm:'var(--green)'};
+  el.innerHTML='<h3>Network ('+S.contacts.length+' contacts)</h3>'+sorted.map(c=>`<div class="contact-card">
+    <div><span class="contact-name">${esc(c.name)}</span><br><span class="contact-meta">${esc(c.org||'')} &mdash; ${c.type} &mdash; <span style="color:${statusColors[c.status]||'var(--bone)'}">${c.status}</span></span>${c.note?'<br><span class="contact-meta">'+esc(c.note)+'</span>':''}</div>
+    <span class="contact-delete" onclick="deleteContact('${c.id}')">&times;</span>
+  </div>`).join('');
+}
+
+function renderAvoidanceTab(){
+  const el=document.getElementById('tab-avoidance');
+  const withAvoided=S.dailyLogs.filter(l=>l.avoided).sort((a,b)=>b.date.localeCompare(a.date));
+  if(!withAvoided.length){el.innerHTML='<p style="opacity:.4;text-align:center;padding:20px">No avoidance data yet.</p>';return;}
+  const last7=[...S.dailyLogs].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7);
+  const oD=last7.filter(l=>(l.outreachCount||0)===0&&!l.guildOutreach).length;
+  const fD=last7.filter(l=>!l.finLiteracy).length;
+  const gD=last7.filter(l=>!l.gcp).length;
+  let html='<h3>7-Day Avoidance Audit</h3><ul>';
+  if(oD>0)html+=`<li><strong>Cold outreach:</strong> <span style="color:var(--ember)">${oD}/7 days avoided.</span></li>`;
+  if(fD>0)html+=`<li><strong>Financial literacy:</strong> <span style="color:var(--ember)">${fD}/7 days avoided.</span></li>`;
+  if(gD>0)html+=`<li><strong>GCP training:</strong> <span style="color:var(--ember)">${gD}/7 days avoided.</span></li>`;
+  html+='</ul><h3>Daily Log</h3><ul>';
+  html+=withAvoided.slice(0,21).map(l=>`<li><strong>${l.date}:</strong> "${esc(l.avoided)}"</li>`).join('');
+  html+='</ul>';el.innerHTML=html;
+}
+
+function renderQuestHistory(){
+  const el=document.getElementById('tab-history'),done=S.quests.filter(q=>q.status!=='active').sort((a,b)=>(b.completedAt||b.createdAt||'').localeCompare(a.completedAt||a.createdAt||''));
+  if(!done.length){el.innerHTML='<p style="opacity:.4;text-align:center;padding:20px">No quest history yet.</p>';return;}
+  const completed=done.filter(q=>q.status==='completed').length,failed=done.filter(q=>q.status==='failed').length;
+  let html=`<h3>Record: <span style="color:var(--green)">${completed} completed</span> / <span style="color:var(--ember)">${failed} failed</span></h3>`;
+  html+=done.map(q=>{const c=q.status==='completed'?'var(--green)':'var(--ember)',ic=q.status==='completed'?'fa-check-circle':'fa-xmark';
+    return `<div class="log-entry"><div class="log-date"><i class="fas ${ic}" style="color:${c}"></i> ${esc(q.name)}<span style="float:right;font-size:.68rem;opacity:.5">${q.domain.toUpperCase()}${q.failCount>1?' (failed x'+q.failCount+')':''}</span></div><div class="log-stats"><span style="color:${c}">${q.status.toUpperCase()}</span><span>${q.completedAt||''}</span></div></div>`;
+  }).join('');
+  el.innerHTML=html;
+}
+
+function renderReviewsTab(){
+  const el=document.getElementById('tab-reviews');
+  if(!S.weeklyReviews.length){el.innerHTML='<p style="opacity:.4;text-align:center;padding:20px">No weekly reviews yet. Run your first Sunday review.</p>';return;}
+  el.innerHTML=S.weeklyReviews.sort((a,b)=>b.date.localeCompare(a.date)).map(r=>`<div class="log-entry">
+    <div class="log-date">Week of ${r.date}</div>
+    <div class="log-stats"><span>Sessions:${r.stats?.sessions||'?'}</span><span>Outreach:${r.stats?.outreach||0}</span><span>Deep work:${r.stats?.deepWork||0}h</span><span>Sleep:${r.stats?.sleepAvg?.toFixed(1)||'?'}</span></div>
+    ${r.iron?`<p style="margin-top:6px"><strong>IRON:</strong> ${esc(r.iron)}</p>`:''}
+    ${r.anvil?`<p><strong>ANVIL:</strong> ${esc(r.anvil)}</p>`:''}
+    ${r.vault?`<p><strong>VAULT:</strong> ${esc(r.vault)}</p>`:''}
+    ${r.guild?`<p><strong>GUILD:</strong> ${esc(r.guild)}</p>`:''}
+    ${r.library?`<p><strong>LIBRARY:</strong> ${esc(r.library)}</p>`:''}
+  </div>`).join('');
+}
+
+// ==================== ACTIONS ====================
+function openModal(name){
+  document.getElementById('modal-'+name).classList.add('open');
+  if(name==='checkin'){document.getElementById('ci-date').value=today();prefillCheckin();renderSleepRating(3);}
+  if(name==='expense')document.getElementById('exp-date').value=today();
+  if(name==='income')document.getElementById('inc-date').value=today();
+  if(name==='quest'){const d=new Date();d.setDate(d.getDate()+7);document.getElementById('q-deadline').value=d.toISOString().slice(0,10);}
+  if(name==='truth')document.getElementById('truth-edit').value=S.truth;
+  if(name==='review')renderReviewStats();
+  if(name==='level'){document.getElementById('lvl-domain').onchange=showMilestoneHint;showMilestoneHint();}
+}
+function closeModal(name){document.getElementById('modal-'+name).classList.remove('open')}
+
+function showMilestoneHint(){
+  const d=document.getElementById('lvl-domain').value;
+  const cur=S.domains[d],next=Math.min(cur+1,5);
+  document.getElementById('lvl-milestone-hint').textContent=`Current: LVL ${cur} (${DOMAIN_META[d].titles[cur]}). Next: LVL ${next} \u2014 ${DOMAIN_META[d].milestones[next]||'Max level'}`;
+}
+
+function prefillCheckin(){
+  const date=document.getElementById('ci-date').value;
+  const existing=S.dailyLogs.find(l=>l.date===date);
+  if(existing){
+    document.getElementById('ci-gym').checked=existing.gym||false;
+    document.getElementById('ci-boxing').checked=existing.boxing||false;
+    document.getElementById('ci-swimming').checked=existing.swimming||false;
+    document.getElementById('ci-rest').checked=existing.rest||false;
+    document.getElementById('ci-overload').checked=existing.overload||false;
+    renderSleepRating(existing.sleep||3);
+    document.getElementById('ci-injury').value=existing.injury||'';
+    document.getElementById('ci-internship').checked=existing.internship||false;
+    document.getElementById('ci-neurgait').checked=existing.neurgait||false;
+    document.getElementById('ci-outreach-count').value=existing.outreachCount||0;
+    document.getElementById('ci-gcp').checked=existing.gcp||false;
+    document.getElementById('ci-fin-literacy').checked=existing.finLiteracy||false;
+    document.getElementById('ci-spent').value=existing.spent||0;
+    document.getElementById('ci-guild-outreach').checked=existing.guildOutreach||false;
+    document.getElementById('ci-relationship').checked=existing.relationship||false;
+    document.getElementById('ci-new-contact').value=existing.newContact||'';
+    document.getElementById('ci-deep-work').value=existing.deepWork||0;
+    document.getElementById('ci-paper').value=existing.paper||'';
+    document.getElementById('ci-avoided').value=existing.avoided||'';
+  } else {
+    document.getElementById('checkin-form').reset();
+    document.getElementById('ci-date').value=date;
+    renderSleepRating(3);
+  }
+}
+
+function editLog(date){
+  document.getElementById('ci-date').value=date;
+  openModal('checkin');
+  prefillCheckin();
+}
+
+function renderSleepRating(val){
+  const el=document.getElementById('ci-sleep');el.innerHTML='';
+  for(let i=1;i<=5;i++){const b=document.createElement('button');b.type='button';b.textContent=i;if(i===val)b.classList.add('active');b.onclick=()=>renderSleepRating(i);el.appendChild(b);}
+  el.dataset.value=val;
+}
+
+function renderReviewStats(){
+  const logs=getWeekLogs(),s=weeklyStats(logs),b=monthlyBudget();
+  const quests=S.quests.filter(q=>q.status!=='active');
+  document.getElementById('review-stats').innerHTML=`
+    <h3>This Week's Stats</h3>
+    <div class="review-stat"><span class="rs-label">Training sessions</span><span class="rs-value">${s.sessions}</span></div>
+    <div class="review-stat"><span class="rs-label">Cold outreach sent</span><span class="rs-value">${s.outreach}</span></div>
+    <div class="review-stat"><span class="rs-label">Deep work hours</span><span class="rs-value">${s.deepWork}</span></div>
+    <div class="review-stat"><span class="rs-label">Sleep average</span><span class="rs-value">${s.sleepAvg?s.sleepAvg.toFixed(1):'--'}/5</span></div>
+    <div class="review-stat"><span class="rs-label">Money spent (week)</span><span class="rs-value">${s.spent.toFixed(0)} CHF</span></div>
+    <div class="review-stat"><span class="rs-label">Money spent (month)</span><span class="rs-value">${b.totalExp.toFixed(0)} CHF</span></div>
+    <div class="review-stat"><span class="rs-label">Savings rate</span><span class="rs-value">${b.rate}%</span></div>
+    <div class="review-stat"><span class="rs-label">Contacts in network</span><span class="rs-value">${S.contacts.length}</span></div>
+    <div class="review-stat"><span class="rs-label">Outreach zero-streak</span><span class="rs-value">${outreachStreak()} days</span></div>
+  `;
+}
+
+async function submitCheckin(e){
+  e.preventDefault();
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const date=document.getElementById('ci-date').value;
+  const oldLog=S.dailyLogs.find(l=>l.date===date);
+  const oldSpent=oldLog?oldLog.spent:0;
+  // Remove old log
+  S.dailyLogs=S.dailyLogs.filter(l=>l.date!==date);
+  // Remove old auto-expense for this date
+  S.expenses=S.expenses.filter(x=>!(x.date===date&&x.note==='From check-in'));
+
+  const newSpent=parseFloat(document.getElementById('ci-spent').value)||0;
+  const newContact=document.getElementById('ci-new-contact').value.trim();
+
+  const log={
+    id:uid(), date, gym:document.getElementById('ci-gym').checked, boxing:document.getElementById('ci-boxing').checked,
+    swimming:document.getElementById('ci-swimming').checked, rest:document.getElementById('ci-rest').checked,
+    overload:document.getElementById('ci-overload').checked, sleep:parseInt(document.getElementById('ci-sleep').dataset.value)||3,
+    injury:document.getElementById('ci-injury').value, internship:document.getElementById('ci-internship').checked,
+    neurgait:document.getElementById('ci-neurgait').checked, outreachCount:parseInt(document.getElementById('ci-outreach-count').value)||0,
+    gcp:document.getElementById('ci-gcp').checked, finLiteracy:document.getElementById('ci-fin-literacy').checked,
+    spent:newSpent, guildOutreach:document.getElementById('ci-guild-outreach').checked,
+    relationship:document.getElementById('ci-relationship').checked, newContact,
+    deepWork:parseFloat(document.getElementById('ci-deep-work').value)||0, paper:document.getElementById('ci-paper').value,
+    avoided:document.getElementById('ci-avoided').value
+  };
+  S.dailyLogs.push(log);
+  await dbInsert('daily_logs',{user_id:userId,...log});
+
+  if(newSpent>0){
+    const exp={id:uid(),date,amount:newSpent,category:'daily',note:'From check-in'};
+    S.expenses.push(exp);
+    await dbInsert('expenses',{user_id:userId,...exp});
+  }
+
+  // Auto-add contact if name provided
+  if(newContact&&!S.contacts.find(c=>c.name.toLowerCase()===newContact.toLowerCase())){
+    const ct={id:uid(),name:newContact,org:'',type:'other',status:'identified',note:'Added via daily check-in',date};
+    S.contacts.push(ct);
+    await dbInsert('contacts',{user_id:userId,...ct});
+  }
+
+  cacheState();closeModal('checkin');renderAll();
+}
+
+async function submitReview(e){
+  e.preventDefault();
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const logs=getWeekLogs(),s=weeklyStats(logs);
+  const review={
+    id:uid(), date:today(), stats:s,
+    iron:document.getElementById('rv-iron').value,
+    anvil:document.getElementById('rv-anvil').value,
+    vault:document.getElementById('rv-vault').value,
+    guild:document.getElementById('rv-guild').value,
+    library:document.getElementById('rv-library').value
+  };
+  S.weeklyReviews.push(review);
+  await dbInsert('weekly_reviews',{user_id:userId,...review});
+  cacheState();closeModal('review');e.target.reset();renderAll();
+}
+
+async function submitQuest(e){
+  e.preventDefault();
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const diff=document.getElementById('q-difficulty').value;
+  const xpMap={daily:10,weekly:25,boss:50};
+  const quest={id:uid(),name:document.getElementById('q-name').value,domain:document.getElementById('q-domain').value,
+    desc:document.getElementById('q-desc').value,deadline:document.getElementById('q-deadline').value,
+    difficulty:diff,xp:xpMap[diff]||25,
+    boss:document.getElementById('q-boss').checked||diff==='boss',status:'active',createdAt:today(),failCount:0};
+  S.quests.push(quest);
+  await dbInsert('quests',{user_id:userId,...quest});
+  cacheState();closeModal('quest');e.target.reset();renderAll();
+}
+async function completeQuest(id){
+  const q=S.quests.find(q=>q.id===id);if(q){q.status='completed';q.completedAt=today();}
+  await dbUpdate('quests',id,{status:'completed',completedAt:today()});
+  cacheState();renderAll();
+}
+async function failQuest(id){
+  const {data:{session}}=await supabase.auth.getSession();
+  const userId=session.user.id;
+  const q=S.quests.find(q=>q.id===id);if(!q)return;
+  q.status='failed';q.completedAt=today();q.failCount=(q.failCount||0)+1;
+  await dbUpdate('quests',id,{status:'failed',completedAt:today(),failCount:q.failCount});
+  const carryover={...q,id:uid(),status:'active',completedAt:null,createdAt:today(),failCount:q.failCount};
+  const baseName=q.name.replace(/^\[ESCALATED[^\]]*\] /,'');
+  if(q.failCount>=2)carryover.name='[ESCALATED x'+q.failCount+'] '+baseName;
+  S.quests.push(carryover);
+  await dbInsert('quests',{user_id:userId,...carryover});
+  cacheState();renderAll();
+}
+async function submitExpense(e){e.preventDefault();const {data:{session}}=await supabase.auth.getSession();const userId=session.user.id;const exp={id:uid(),date:document.getElementById('exp-date').value,amount:parseFloat(document.getElementById('exp-amount').value),category:document.getElementById('exp-category').value,note:document.getElementById('exp-note').value};S.expenses.push(exp);await dbInsert('expenses',{user_id:userId,...exp});cacheState();closeModal('expense');e.target.reset();renderAll();}
+async function submitIncome(e){e.preventDefault();const {data:{session}}=await supabase.auth.getSession();const userId=session.user.id;const inc={id:uid(),date:document.getElementById('inc-date').value,amount:parseFloat(document.getElementById('inc-amount').value),source:document.getElementById('inc-source').value,note:document.getElementById('inc-note').value};S.income.push(inc);await dbInsert('income',{user_id:userId,...inc});cacheState();closeModal('income');e.target.reset();renderAll();}
+async function submitContact(e){e.preventDefault();const {data:{session}}=await supabase.auth.getSession();const userId=session.user.id;const ct={id:uid(),name:document.getElementById('ct-name').value,org:document.getElementById('ct-org').value,type:document.getElementById('ct-type').value,status:document.getElementById('ct-status').value,note:document.getElementById('ct-note').value,date:today()};S.contacts.push(ct);await dbInsert('contacts',{user_id:userId,...ct});cacheState();closeModal('contact');e.target.reset();renderAll();}
+async function submitLevel(e){e.preventDefault();S.domains[document.getElementById('lvl-domain').value]=parseInt(document.getElementById('lvl-level').value);await dbUpsertProfile({domains:S.domains});cacheState();closeModal('level');renderAll();}
+async function submitTruth(e){e.preventDefault();S.truth=document.getElementById('truth-edit').value;await dbUpsertProfile({truth:S.truth});cacheState();closeModal('truth');renderAll();}
+async function deleteLog(date){if(!confirm('Delete log for '+date+'?'))return;const log=S.dailyLogs.find(l=>l.date===date);S.dailyLogs=S.dailyLogs.filter(l=>l.date!==date);S.expenses=S.expenses.filter(x=>!(x.date===date&&x.note==='From check-in'));if(log&&log.id)await dbDelete('daily_logs',log.id);cacheState();renderAll();}
+async function deleteTx(id,type){if(type==='expense')S.expenses=S.expenses.filter(e=>e.id!==id);else S.income=S.income.filter(i=>i.id!==id);await dbDelete(type==='expense'?'expenses':'income',id);cacheState();renderAll();}
+async function deleteContact(id){S.contacts=S.contacts.filter(c=>c.id!==id);await dbDelete('contacts',id);cacheState();renderAll();}
+
+// ==================== TABS ====================
+function switchTab(btn,name){btn.closest('.tome-tabs').querySelectorAll('.tome-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');btn.closest('.tome-section').querySelectorAll('.tome-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+name).classList.add('active');}
+
+// ==================== AUDIO ====================
+const audio=document.getElementById('forgeAudio'),audioBars=document.getElementById('audioBars');
+for(let i=0;i<60;i++){const b=document.createElement('div');b.className='audio-bar';b.style.height='3px';audioBars.appendChild(b);}
+const bars=audioBars.querySelectorAll('.audio-bar');let animFrame;
+function toggleAudio(){const ic=document.getElementById('playIcon');if(audio.paused){audio.play();ic.className='fas fa-pause';animBars();}else{audio.pause();ic.className='fas fa-play';cancelAnimationFrame(animFrame);bars.forEach(b=>b.style.height='3px');}}
+function animBars(){bars.forEach(b=>b.style.height=(Math.random()*35+5)+'px');if(!audio.paused)animFrame=requestAnimationFrame(()=>setTimeout(animBars,100));}
+audio.addEventListener('timeupdate',()=>{document.getElementById('audioTime').textContent=`${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration)}`;});
+audio.addEventListener('ended',()=>{document.getElementById('playIcon').className='fas fa-play';bars.forEach(b=>b.style.height='3px');});
+
+// ==================== MODAL CLOSE ON OVERLAY ====================
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
+
+// ==================== KEYBOARD SHORTCUT ====================
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
+  if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
+  if(e.key==='d')openModal('checkin');
+  if(e.key==='q')openModal('quest');
+  if(e.key==='e')openModal('expense');
+  if(e.key==='r')openModal('review');
+});
+
+// ==================== INIT ====================
+initForge(() => renderAll());
+</script>
+<a href="quick-input.html" class="qi-fab" title="Quick Input"><i class="fas fa-microphone"></i></a>
+</body>
+</html>

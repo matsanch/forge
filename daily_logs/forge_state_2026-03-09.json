@@ -1,0 +1,311 @@
+{
+  "domains": {
+    "iron": 1,
+    "anvil": 0,
+    "vault": 1,
+    "guild": 0,
+    "library": 0
+  },
+  "dailyLogs": [
+    {
+      "date": "2026-03-08",
+      "gym": false,
+      "boxing": false,
+      "swimming": false,
+      "rest": true,
+      "overload": false,
+      "sleep": 4,
+      "injury": "",
+      "internship": false,
+      "neurgait": false,
+      "outreachCount": 0,
+      "gcp": false,
+      "finLiteracy": false,
+      "spent": 2.9,
+      "guildOutreach": false,
+      "relationship": false,
+      "newContact": "",
+      "deepWork": 0,
+      "paper": "",
+      "avoided": ""
+    },
+    {
+      "date": "2026-03-09",
+      "gym": true,
+      "boxing": false,
+      "swimming": false,
+      "rest": false,
+      "overload": true,
+      "sleep": 3,
+      "injury": "",
+      "internship": false,
+      "neurgait": false,
+      "outreachCount": 0,
+      "gcp": false,
+      "finLiteracy": false,
+      "spent": 27.8,
+      "guildOutreach": false,
+      "relationship": true,
+      "newContact": "",
+      "deepWork": 0,
+      "paper": "",
+      "avoided": "I avoided the neurgait work, due to lack of direction. No reading either. "
+    }
+  ],
+  "quests": [
+    {
+      "id": "mmiuvy7ku0w28j",
+      "name": "Gym",
+      "domain": "iron",
+      "desc": "Lower body ",
+      "deadline": "2026-03-16",
+      "difficulty": "daily",
+      "xp": 10,
+      "boss": false,
+      "status": "completed",
+      "createdAt": "2026-03-09",
+      "failCount": 0,
+      "completedAt": "2026-03-09"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "mmhz4unxcy8evi",
+      "date": "2026-03-08",
+      "amount": 2.9,
+      "category": "daily",
+      "note": "From check-in"
+    },
+    {
+      "id": "mmixl1rbi10h47",
+      "date": "2026-03-02",
+      "amount": 11.1,
+      "category": "transport",
+      "note": ""
+    },
+    {
+      "id": "mmixlfzhq21mi0",
+      "date": "2026-03-02",
+      "amount": 57.45,
+      "category": "gear",
+      "note": "aux lights"
+    },
+    {
+      "id": "mmixmewipxq8ae",
+      "date": "2026-03-09",
+      "amount": 8.5,
+      "category": "food",
+      "note": "lidl"
+    },
+    {
+      "id": "mmixn3pv2oa4ia",
+      "date": "2026-03-09",
+      "amount": 9.85,
+      "category": "food",
+      "note": ""
+    },
+    {
+      "id": "mmixnnpzarru7h",
+      "date": "2026-03-04",
+      "amount": 6,
+      "category": "other",
+      "note": "Swimming vaudoise arena"
+    },
+    {
+      "id": "mmixp6chuqbkbf",
+      "date": "2026-03-04",
+      "amount": 58.3,
+      "category": "food",
+      "note": "denner + electrolytes + themeal"
+    },
+    {
+      "id": "mmixq12kiqhkpm",
+      "date": "2026-03-05",
+      "amount": 39.05,
+      "category": "food",
+      "note": "denner"
+    },
+    {
+      "id": "mmixqgmemxunl9",
+      "date": "2026-03-05",
+      "amount": 109.9,
+      "category": "gear",
+      "note": "Boxing gloves"
+    },
+    {
+      "id": "mmixrh9pfue0hs",
+      "date": "2026-03-06",
+      "amount": 41.5,
+      "category": "food",
+      "note": "Aligro"
+    },
+    {
+      "id": "mmixszezpo84xq",
+      "date": "2026-03-06",
+      "amount": 6.5,
+      "category": "food",
+      "note": "monster elevate"
+    },
+    {
+      "id": "mmixtd6owbz7jm",
+      "date": "2026-03-09",
+      "amount": 15.98,
+      "category": "food",
+      "note": "migrol"
+    },
+    {
+      "id": "mmixv21c8b6g8q",
+      "date": "2026-03-07",
+      "amount": 6.3,
+      "category": "food",
+      "note": "station service"
+    },
+    {
+      "id": "mmixvkwgdc2nap",
+      "date": "2026-03-07",
+      "amount": 6,
+      "category": "other",
+      "note": "Malley natation"
+    },
+    {
+      "id": "mmixw2sp8s8sa5",
+      "date": "2026-03-09",
+      "amount": 27.8,
+      "category": "food",
+      "note": "migros"
+    },
+    {
+      "id": "mmixy6pzmhk4ob",
+      "date": "2026-03-05",
+      "amount": 65,
+      "category": "other",
+      "note": "Revolut"
+    },
+    {
+      "id": "mmiy0nvhkmy5ee",
+      "date": "2026-02-28",
+      "amount": 15.95,
+      "category": "subscription",
+      "note": "spotify"
+    },
+    {
+      "id": "mmiy5z34dzgdy8",
+      "date": "2026-03-02",
+      "amount": 62.1,
+      "category": "subscription",
+      "note": "Elevate"
+    },
+    {
+      "id": "mmjnt7eigvxfib",
+      "date": "2026-03-09",
+      "amount": 27.8,
+      "category": "daily",
+      "note": "From check-in"
+    }
+  ],
+  "income": [
+    {
+      "id": "mmixjufqaza7ox",
+      "date": "2026-03-02",
+      "amount": 105,
+      "source": "swimming-lessons",
+      "note": ""
+    },
+    {
+      "id": "mmiy8tl2scq5zo",
+      "date": "2026-03-02",
+      "amount": 603.64,
+      "source": "parents",
+      "note": "After saving deduction of 300"
+    }
+  ],
+  "contacts": [],
+  "weeklyReviews": [],
+  "truth": "Click here to set your Uncomfortable Truth.",
+  "startDate": "2026-03-08",
+  "iron": {
+    "workouts": [
+      {
+        "id": "mmj6oerg37bgzp",
+        "date": "2026-03-09",
+        "exercises": [
+          {
+            "name": "Hack squat",
+            "muscle": "Quads",
+            "sets": 4,
+            "reps": 5,
+            "weight": 120
+          },
+          {
+            "name": "Cable crunch",
+            "muscle": "Core",
+            "sets": 4,
+            "reps": 10,
+            "weight": 113
+          },
+          {
+            "name": "RDL",
+            "muscle": "Hamstrings",
+            "sets": 3,
+            "reps": 8,
+            "weight": 120
+          },
+          {
+            "name": "DB Split squat",
+            "muscle": "Quads",
+            "sets": 3,
+            "reps": 5,
+            "weight": 80
+          }
+        ],
+        "energy": 3,
+        "duration": 90,
+        "notes": "Longer than usual since I answered a call"
+      }
+    ],
+    "swimmingSessions": [],
+    "boxingSessions": [
+      {
+        "id": "mmj6qznb8tnsdx",
+        "date": "2026-03-09",
+        "type": "shadow",
+        "rounds": 3,
+        "duration": 3,
+        "mistakes": [
+          {
+            "desc": "Shoulders drop",
+            "category": "conditioning"
+          },
+          {
+            "desc": "Too much bouncing for my weight",
+            "category": "footwork"
+          },
+          {
+            "desc": "Not enough feints",
+            "category": "offense"
+          }
+        ],
+        "workOn": "Don't know based on this. since it is weighted. ",
+        "notes": "1kg each arm. Stuck through the 3 rounds. "
+      }
+    ]
+  },
+  "anvil": {
+    "tasks": [],
+    "outreachLog": []
+  },
+  "vault": {
+    "budgetGoals": {
+      "monthlyTarget": 0,
+      "savingsTarget": 10
+    }
+  },
+  "guild": {
+    "interactions": []
+  },
+  "library": {
+    "papers": [],
+    "courses": [],
+    "deepWorkSessions": []
+  }
+}

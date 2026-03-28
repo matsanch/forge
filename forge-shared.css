@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Fira+Code:wght@400;500&family=Inter:wght@300;400;600&display=swap');
+:root{--charcoal:#1a1a2e;--deep-bg:#0f0f1a;--ember:#e94560;--gold:#d4a844;--bone:#f0e6d3;--blood:#8b0000;--stone:#2a2a3e;--green:#4ade80}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--deep-bg);color:var(--bone);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 80%,rgba(233,69,96,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(212,168,68,.06) 0%,transparent 60%),radial-gradient(ellipse at 50% 50%,rgba(139,0,0,.04) 0%,transparent 80%);pointer-events:none;z-index:0}
+
+/* Layout */
+.container{max-width:1200px;margin:0 auto;padding:20px;position:relative;z-index:1}
+
+/* Subpage Header */
+.sub-header{display:flex;align-items:center;gap:16px;padding:20px 0 15px;border-bottom:2px solid var(--gold);margin-bottom:24px}
+.sub-header .back-link{font-family:'Cinzel',serif;font-size:.8rem;color:var(--gold);text-decoration:none;display:flex;align-items:center;gap:6px;opacity:.7;transition:opacity .3s}
+.sub-header .back-link:hover{opacity:1}
+.sub-header h1{font-family:'Cinzel',serif;font-size:2rem;font-weight:900;letter-spacing:.2em;background:linear-gradient(135deg,var(--gold),var(--ember),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub-header .domain-badge{font-family:'Fira Code',monospace;font-size:.75rem;padding:4px 10px;border:1px solid var(--gold);border-radius:4px;color:var(--gold)}
+
+/* Panel */
+.panel{background:rgba(26,26,46,.85);backdrop-filter:blur(15px);border:2px solid var(--gold);border-radius:8px;padding:20px;position:relative;overflow:hidden;margin-bottom:20px}
+.panel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.panel-title{font-family:'Cinzel',serif;font-size:1rem;color:var(--gold);letter-spacing:.12em;margin-bottom:15px;display:flex;align-items:center;gap:10px}
+.panel-title i{color:var(--ember)}
+
+/* Grid */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+
+/* Form elements */
+.form-section{margin-bottom:16px}
+.form-section-title{font-family:'Cinzel',serif;font-size:.82rem;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.form-row{display:flex;gap:10px;margin-bottom:7px;align-items:center;flex-wrap:wrap}
+.form-input{background:rgba(240,230,211,.05);border:1px solid rgba(212,168,68,.3);border-radius:4px;padding:7px 10px;color:var(--bone);font-family:'Inter',sans-serif;font-size:.82rem;width:100%;transition:border-color .3s}
+.form-input:focus{outline:none;border-color:var(--gold)}
+.form-input::placeholder{color:rgba(240,230,211,.25)}
+select.form-input{cursor:pointer}
+textarea.form-input{resize:vertical;min-height:55px}
+.form-input-sm{width:80px}
+.form-input-md{width:150px}
+.form-input-lg{width:250px}
+
+/* Buttons */
+.btn{font-family:'Cinzel',serif;font-size:.75rem;padding:8px 16px;border:2px solid var(--gold);border-radius:6px;background:transparent;color:var(--gold);cursor:pointer;transition:all .3s;letter-spacing:.08em;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--gold);color:var(--deep-bg)}
+.btn-primary{border-color:var(--ember);color:var(--ember)}
+.btn-primary:hover{background:var(--ember);color:var(--bone)}
+.btn-sm{font-size:.65rem;padding:4px 10px}
+.btn-delete{border-color:var(--ember);color:var(--ember);opacity:.5}
+.btn-delete:hover{opacity:1;background:var(--ember);color:var(--bone)}
+.form-submit{font-family:'Cinzel',serif;font-size:.85rem;padding:10px 28px;border:2px solid var(--gold);border-radius:6px;background:transparent;color:var(--gold);cursor:pointer;transition:all .3s;letter-spacing:.1em;width:100%;margin-top:8px}
+.form-submit:hover{background:var(--gold);color:var(--deep-bg)}
+
+/* Table */
+.data-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.data-table th{font-family:'Cinzel',serif;color:var(--gold);text-align:left;padding:8px;border-bottom:2px solid var(--gold);font-size:.72rem;letter-spacing:.08em}
+.data-table td{padding:6px 8px;border-bottom:1px solid rgba(212,168,68,.1);font-family:'Fira Code',monospace;font-size:.72rem}
+.data-table tr:hover{background:rgba(212,168,68,.05)}
+
+/* Entry card */
+.entry-card{padding:12px;border:1px solid rgba(212,168,68,.15);border-radius:6px;margin-bottom:8px;font-size:.78rem;transition:border-color .3s}
+.entry-card:hover{border-color:var(--gold)}
+.entry-card .entry-date{font-family:'Cinzel',serif;color:var(--gold);font-size:.82rem;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.entry-card .entry-meta{font-family:'Fira Code',monospace;font-size:.68rem;opacity:.6}
+
+/* Stats summary */
+.stat-mini{display:flex;flex-direction:column;align-items:center;padding:12px;background:rgba(212,168,68,.05);border-radius:6px;border:1px solid rgba(212,168,68,.15)}
+.stat-mini .sm-value{font-family:'Fira Code',monospace;font-size:1.4rem;font-weight:600;color:var(--bone)}
+.stat-mini .sm-label{font-size:.6rem;text-transform:uppercase;opacity:.5;letter-spacing:.08em;margin-top:2px;text-align:center}
+
+/* Empty state */
+.empty-state{text-align:center;padding:40px 20px;opacity:.4;font-style:italic;font-size:.85rem}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:100;justify-content:center;align-items:flex-start;padding:30px 20px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--charcoal);border:2px solid var(--gold);border-radius:8px;width:100%;max-width:620px;padding:22px;position:relative;max-height:92vh;overflow-y:auto}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.modal h2{font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;margin-bottom:18px;letter-spacing:.1em}
+.modal-close{position:absolute;top:10px;right:14px;background:none;border:none;color:var(--bone);font-size:1.2rem;cursor:pointer;opacity:.5;transition:opacity .3s}
+.modal-close:hover{opacity:1}
+
+/* Tags */
+.tag{display:inline-block;font-family:'Fira Code',monospace;font-size:.6rem;padding:2px 6px;border-radius:3px;border:1px solid rgba(212,168,68,.3);margin:2px}
+.tag-muscle{border-color:var(--green);color:var(--green)}
+.tag-weakness{border-color:var(--ember);color:var(--ember)}
+
+/* Quick Input FAB */
+.qi-fab { position:fixed; bottom:20px; right:20px; width:56px; height:56px; border-radius:50%; background:var(--ember); border:none; color:var(--bone); font-size:1.4rem; cursor:pointer; box-shadow:0 4px 12px rgba(233,69,96,.4); z-index:100; display:flex; align-items:center; justify-content:center; text-decoration:none; }
+.qi-fab:hover { transform:scale(1.05); }
+
+/* Responsive */
+@media(max-width:768px){.grid-2,.grid-3{grid-template-columns:1fr}.sub-header h1{font-size:1.4rem}}
+@media(min-width:1024px) { .qi-fab { bottom:30px; right:30px; } }
