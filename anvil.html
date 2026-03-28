@@ -178,7 +178,7 @@ function renderTaskList() {
   el.innerHTML = [...S.anvil.tasks].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20).map(t =>
     `<div class="entry-card">
       <div class="entry-date">${t.date} <span class="entry-meta">${t.project} · ${t.hours||0}h · ${t.status}</span></div>
-      <div style="font-size:.8rem">${esc(t.desc)}</div>
+      <div style="font-size:.8rem">${esc(t.description)}</div>
       ${t.blockers ? `<div style="margin-top:4px;color:var(--ember);font-size:.72rem">${esc(t.blockers)}</div>` : ''}
     </div>`
   ).join('');
@@ -225,7 +225,7 @@ async function submitTask(e) {
     id: uid(),
     date: document.getElementById('task-date').value || today(),
     project: document.getElementById('task-project').value,
-    desc: document.getElementById('task-desc').value,
+    description: document.getElementById('task-desc').value,
     hours: parseFloat(document.getElementById('task-hours').value) || 0,
     status: document.getElementById('task-status').value,
     blockers: document.getElementById('task-blockers').value

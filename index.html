@@ -659,7 +659,7 @@ function renderQuests(){
     return `<div class="${cls}"><div class="quest-status-indicator"></div>
       <div class="quest-domain">${q.boss?'BOSS FIGHT \u2014 ':''}${q.domain.toUpperCase()}</div>
       <div class="quest-name">${esc_tag}${esc(q.name)}</div>
-      <div class="quest-desc">${esc(q.desc||q.criteria||'')}</div>
+      <div class="quest-desc">${esc(q.description||q.criteria||'')}</div>
       <div class="quest-deadline"><i class="fas fa-clock"></i> ${q.deadline||'No deadline'} \u2014 ${dl} days left${q.xp?' \u00b7 '+q.xp+' XP':''}${q.difficulty?' \u00b7 '+q.difficulty:''}</div>
       <div class="quest-actions">
         <button class="btn-complete" onclick="completeQuest('${q.id}')"><i class="fas fa-check"></i> Complete</button>
@@ -958,7 +958,7 @@ async function submitQuest(e){
   const diff=document.getElementById('q-difficulty').value;
   const xpMap={daily:10,weekly:25,boss:50};
   const quest={id:uid(),name:document.getElementById('q-name').value,domain:document.getElementById('q-domain').value,
-    desc:document.getElementById('q-desc').value,deadline:document.getElementById('q-deadline').value,
+    description:document.getElementById('q-desc').value,deadline:document.getElementById('q-deadline').value,
     difficulty:diff,xp:xpMap[diff]||25,
     boss:document.getElementById('q-boss').checked||diff==='boss',status:'active',createdAt:today(),failCount:0};
   S.quests.push(quest);

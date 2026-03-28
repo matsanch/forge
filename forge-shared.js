@@ -62,7 +62,7 @@ let S = defaultState();
 function saveState() { cacheState(); }
 
 // ==================== UTILITIES ====================
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function uid(){return crypto.randomUUID()}
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function today(){return new Date().toISOString().slice(0,10)}
 function overallLevel(){const v=Object.values(S.domains);return Math.floor(v.reduce((a,b)=>a+b,0)/v.length)}
