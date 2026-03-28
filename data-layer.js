@@ -202,12 +202,12 @@ function cacheState() {
 }
 
 async function loadStateAsync() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    window.location.href = 'login.html';
-    return defaultState();
-  }
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      window.location.href = 'login.html';
+      return defaultState();
+    }
     if (navigator.onLine) {
       await replayQueue();
       const state = await fetchFullState(session.user.id);
@@ -217,12 +217,18 @@ async function loadStateAsync() {
     return (await idbGet('cache', 'fullState')) || defaultState();
   } catch (e) {
     console.error('State load failed:', e);
-    return (await idbGet('cache', 'fullState')) || defaultState();
+    try { return (await idbGet('cache', 'fullState')) || defaultState(); } catch (_) {}
+    return defaultState();
   }
 }
 
 async function initForge(renderCallback) {
-  S = await loadStateAsync();
+  try {
+    S = await loadStateAsync();
+  } catch (e) {
+    console.error('initForge failed:', e);
+    S = defaultState();
+  }
   const loader = document.getElementById('forge-loading');
   if (loader) loader.remove();
   if (renderCallback) renderCallback();
