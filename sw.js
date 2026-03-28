@@ -1,4 +1,4 @@
-const CACHE = 'forge-v1';
+const CACHE = 'forge-v3';
 const ASSETS = [
   '/', '/index.html', '/iron.html', '/anvil.html', '/vault.html',
   '/guild.html', '/library.html', '/quick-input.html', '/login.html',
@@ -23,7 +23,9 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   // Skip Supabase API calls — let them go to network
   if (e.request.url.includes('supabase.co')) return;
+  // Skip non-GET requests
+  if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
+    caches.match(e.request).then(r => r || fetch(e.request.url))
   );
 });
