@@ -104,14 +104,6 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 /* Sparkline */
 .sparkline{display:flex;align-items:flex-end;justify-content:center;gap:1px;height:20px;margin-top:4px}
 .sparkline .spark-bar{width:4px;background:var(--gold);border-radius:1px 1px 0 0;min-height:1px}
-/* Audio */
-.audio-section{margin-top:20px;background:rgba(26,26,46,.85);border:2px solid var(--gold);border-radius:8px;padding:18px}
-.audio-player-wrapper{display:flex;align-items:center;gap:15px}
-.play-btn{width:46px;height:46px;border-radius:50%;border:2px solid var(--gold);background:transparent;color:var(--gold);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s;flex-shrink:0}
-.play-btn:hover{background:var(--gold);color:var(--deep-bg)}
-.audio-bars{flex:1;height:36px;display:flex;align-items:flex-end;gap:2px}
-.audio-bar{flex:1;background:linear-gradient(to top,var(--ember),var(--gold));border-radius:1px 1px 0 0;min-height:3px;transition:height .15s ease}
-.audio-time{font-family:'Fira Code',monospace;font-size:.75rem;color:var(--gold);opacity:.6;min-width:80px;text-align:right}
 /* Tome */
 .tome-section{margin-top:20px;background:rgba(26,26,46,.85);border:2px solid var(--gold);border-radius:8px;overflow:hidden}
 .tome-tabs{display:flex;border-bottom:2px solid var(--gold);overflow-x:auto}
@@ -158,6 +150,10 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .modal h2{font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;margin-bottom:18px;letter-spacing:.1em}
 .modal-close{position:absolute;top:10px;right:14px;background:none;border:none;color:var(--bone);font-size:1.2rem;cursor:pointer;opacity:.5;transition:opacity .3s}
 .modal-close:hover{opacity:1}
+/* Quick Input */
+.mic-btn.recording{background:var(--ember);color:var(--bone);animation:pulse-mic 1s ease-in-out infinite}
+@keyframes pulse-mic{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.qi-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--green);color:var(--deep-bg);padding:10px 20px;border-radius:6px;font-family:'Cinzel',serif;display:none;z-index:200}
 /* Form */
 .form-section{margin-bottom:16px}
 .form-section-title{font-family:'Cinzel',serif;font-size:.82rem;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:8px}
@@ -205,15 +201,13 @@ textarea.form-input{resize:vertical;min-height:55px}
 
   <div class="action-bar">
     <button class="action-btn primary" onclick="openModal('checkin')"><i class="fas fa-fire"></i> Daily Check-in</button>
-    <button class="action-btn sunday" onclick="openModal('review')"><i class="fas fa-book-open"></i> Weekly Review</button>
-    <button class="action-btn" onclick="openModal('quest')"><i class="fas fa-scroll"></i> New Quest</button>
+    <button class="action-btn primary" onclick="openModal('quickinput')"><i class="fas fa-bolt"></i> Quick Input</button>
     <button class="action-btn" onclick="openModal('expense')"><i class="fas fa-coins"></i> Expense</button>
     <button class="action-btn" onclick="openModal('income')"><i class="fas fa-gem"></i> Income</button>
+    <button class="action-btn" onclick="openModal('quest')"><i class="fas fa-scroll"></i> New Quest</button>
     <button class="action-btn" onclick="openModal('contact')"><i class="fas fa-user-plus"></i> Contact</button>
     <button class="action-btn" onclick="openModal('level')"><i class="fas fa-arrow-up"></i> Level</button>
-    <button class="action-btn" onclick="exportState()"><i class="fas fa-download"></i> Export</button>
-    <button class="action-btn" onclick="document.getElementById('import-file').click()"><i class="fas fa-upload"></i> Import</button>
-    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importState(event)">
+    <button class="action-btn sunday" onclick="openModal('review')"><i class="fas fa-book-open"></i> Weekly Review</button>
   </div>
 
   <!-- DOMAIN NAVIGATION -->
@@ -250,17 +244,6 @@ textarea.form-input{resize:vertical;min-height:55px}
   </div>
 
   <div class="stats-bar" id="stats-bar"></div>
-
-  <!-- AUDIO -->
-  <div class="audio-section">
-    <div class="panel-title"><i class="fas fa-microphone-lines"></i> FORGE MASTER AUDIO BRIEFING</div>
-    <div class="audio-player-wrapper">
-      <button class="play-btn" onclick="toggleAudio()"><i class="fas fa-play" id="playIcon"></i></button>
-      <div class="audio-bars" id="audioBars"></div>
-      <div class="audio-time" id="audioTime">00:00 / --:--</div>
-    </div>
-    <audio id="forgeAudio" src="audio_briefing.mp3"></audio>
-  </div>
 
   <!-- TOME -->
   <div class="tome-section">
@@ -461,8 +444,38 @@ textarea.form-input{resize:vertical;min-height:55px}
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-quickinput">
+  <div class="modal" style="max-width:520px">
+    <button class="modal-close" onclick="closeModal('quickinput')">&times;</button>
+    <h2><i class="fas fa-bolt"></i> Quick Input</h2>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <textarea class="form-input" id="qi-text" placeholder="Type or speak..." oninput="previewParse()" style="resize:none;min-height:55px;font-family:'Fira Code',monospace;font-size:.9rem"></textarea>
+      <button class="mic-btn" id="mic-btn" onclick="toggleMic()" style="width:46px;height:46px;border-radius:50%;border:2px solid var(--ember);background:transparent;color:var(--ember);font-size:1.1rem;cursor:pointer;flex-shrink:0;align-self:center;transition:all .3s"><i class="fas fa-microphone"></i></button>
+    </div>
+    <div style="background:rgba(26,26,46,.9);border:2px solid var(--stone);border-radius:6px;padding:14px;margin-bottom:14px;min-height:70px">
+      <div id="qi-preview-type" style="font-family:'Cinzel',serif;color:var(--ember);font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Waiting for input...</div>
+      <div id="qi-preview-data" style="font-family:'Fira Code',monospace;font-size:.75rem;color:var(--bone);opacity:.8;white-space:pre-wrap"></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn" style="flex:1" onclick="clearQI()">CLEAR</button>
+      <button class="btn-primary btn" style="flex:1;border-color:var(--green);color:var(--green)" id="qi-confirm-btn" onclick="confirmQI()" disabled>CONFIRM</button>
+    </div>
+    <div style="margin-top:14px;opacity:.4;font-size:.65rem;color:var(--bone);line-height:1.6">
+      <strong>Examples:</strong>
+      <code style="color:var(--gold)">spent 27.8 migros food</code> &middot;
+      <code style="color:var(--gold)">gym 90min bench 4x8x80</code> &middot;
+      <code style="color:var(--gold)">swam 1000m 40min</code> &middot;
+      <code style="color:var(--gold)">deep work 2h gait analysis</code> &middot;
+      <code style="color:var(--gold)">earned 500 swimming lessons</code>
+    </div>
+  </div>
+</div>
+
+<div class="qi-toast" id="qi-toast">Logged!</div>
+
 <script src="forge-shared.js"></script>
 <script src="data-layer.js"></script>
+<script src="input-parser.js"></script>
 <script>
 // ========================================================================
 // THE FORGE — Interactive Life OS Engine
@@ -475,9 +488,6 @@ const PHASES = [
   { name:'Clinical Trial Active', start:'2026-04-20', end:'2026-06-30', weights:{anvil:35,guild:35,library:15,vault:15} },
   { name:'Thesis Securing',      start:'2026-07-01', end:'2026-09-20', weights:{guild:40,anvil:30,library:15,vault:15} }
 ];
-
-// ==================== UTILITIES ====================
-function fmtTime(s){if(isNaN(s))return'--:--';return`${Math.floor(s/60).toString().padStart(2,'0')}:${Math.floor(s%60).toString().padStart(2,'0')}`}
 
 // ==================== COMPUTED ====================
 function currentPhase(){
@@ -995,14 +1005,83 @@ async function deleteContact(id){S.contacts=S.contacts.filter(c=>c.id!==id);awai
 // ==================== TABS ====================
 function switchTab(btn,name){btn.closest('.tome-tabs').querySelectorAll('.tome-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');btn.closest('.tome-section').querySelectorAll('.tome-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+name).classList.add('active');}
 
-// ==================== AUDIO ====================
-const audio=document.getElementById('forgeAudio'),audioBars=document.getElementById('audioBars');
-for(let i=0;i<60;i++){const b=document.createElement('div');b.className='audio-bar';b.style.height='3px';audioBars.appendChild(b);}
-const bars=audioBars.querySelectorAll('.audio-bar');let animFrame;
-function toggleAudio(){const ic=document.getElementById('playIcon');if(audio.paused){audio.play();ic.className='fas fa-pause';animBars();}else{audio.pause();ic.className='fas fa-play';cancelAnimationFrame(animFrame);bars.forEach(b=>b.style.height='3px');}}
-function animBars(){bars.forEach(b=>b.style.height=(Math.random()*35+5)+'px');if(!audio.paused)animFrame=requestAnimationFrame(()=>setTimeout(animBars,100));}
-audio.addEventListener('timeupdate',()=>{document.getElementById('audioTime').textContent=`${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration)}`;});
-audio.addEventListener('ended',()=>{document.getElementById('playIcon').className='fas fa-play';bars.forEach(b=>b.style.height='3px');});
+// ==================== QUICK INPUT ====================
+let qiLastParsed = null;
+let qiRecognition = null;
+
+function previewParse() {
+  const text = document.getElementById('qi-text').value;
+  const typeEl = document.getElementById('qi-preview-type');
+  const dataEl = document.getElementById('qi-preview-data');
+  const btn = document.getElementById('qi-confirm-btn');
+  if (!text.trim()) {
+    typeEl.textContent = 'Waiting for input...';
+    dataEl.textContent = '';
+    btn.disabled = true;
+    qiLastParsed = null;
+    return;
+  }
+  qiLastParsed = parseInput(text);
+  typeEl.textContent = qiLastParsed.type === 'unknown' ? 'Could not parse' : qiLastParsed.type.replace('_', ' ');
+  dataEl.textContent = JSON.stringify(qiLastParsed.data, null, 2);
+  btn.disabled = qiLastParsed.type === 'unknown';
+}
+
+async function confirmQI() {
+  if (!qiLastParsed || qiLastParsed.type === 'unknown') return;
+  const session = await supabase.auth.getSession();
+  if (!session.data.session) { window.location.href = 'login.html'; return; }
+  const userId = session.data.session.user.id;
+  const row = { user_id: userId, ...qiLastParsed.data };
+  const tableMap = {
+    expense: 'expenses', income: 'income', workout: 'workouts',
+    swimming: 'swimming_sessions', boxing: 'boxing_sessions',
+    deep_work: 'deep_work_sessions'
+  };
+  const table = tableMap[qiLastParsed.type];
+  if (table) await dbInsert(table, row);
+  const toast = document.getElementById('qi-toast');
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 1500);
+  clearQI();
+  renderAll();
+}
+
+function clearQI() {
+  document.getElementById('qi-text').value = '';
+  previewParse();
+}
+
+function toggleMic() {
+  const btn = document.getElementById('mic-btn');
+  if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+    alert('Speech recognition not supported in this browser');
+    return;
+  }
+  if (qiRecognition) {
+    qiRecognition.stop();
+    qiRecognition = null;
+    btn.classList.remove('recording');
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  qiRecognition = new SR();
+  qiRecognition.lang = 'en-US';
+  qiRecognition.continuous = false;
+  qiRecognition.interimResults = false;
+  qiRecognition.onresult = e => {
+    document.getElementById('qi-text').value = e.results[0][0].transcript;
+    previewParse();
+  };
+  qiRecognition.onend = () => { btn.classList.remove('recording'); qiRecognition = null; };
+  qiRecognition.start();
+  btn.classList.add('recording');
+}
+
+// Hide mic if not supported
+if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+  document.getElementById('mic-btn').style.display = 'none';
+}
 
 // ==================== MODAL CLOSE ON OVERLAY ====================
 document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
@@ -1012,6 +1091,7 @@ document.addEventListener('keydown',e=>{
   if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
   if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
   if(e.key==='d')openModal('checkin');
+  if(e.key==='i')openModal('quickinput');
   if(e.key==='q')openModal('quest');
   if(e.key==='e')openModal('expense');
   if(e.key==='r')openModal('review');

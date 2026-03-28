@@ -67,10 +67,6 @@ function esc(s){const d=document.createElement('div');d.textContent=s;return d.i
 function today(){return new Date().toISOString().slice(0,10)}
 function overallLevel(){const v=Object.values(S.domains);return Math.floor(v.reduce((a,b)=>a+b,0)/v.length)}
 
-// ==================== IMPORT / EXPORT ====================
-function exportState() { const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`forge_state_${today()}.json`; a.click(); }
-function importState(e) { const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=ev=>{try{const i=JSON.parse(ev.target.result);if(i.domains){S=i;if(!S.contacts)S.contacts=[];if(!S.weeklyReviews)S.weeklyReviews=[];saveState();if(typeof renderAll==='function')renderAll();}}catch(er){alert('Invalid file');}}; r.readAsText(f); e.target.value=''; }
-
 // ==================== SERVICE WORKER ====================
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});

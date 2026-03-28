@@ -1,4 +1,4 @@
-const CACHE = 'forge-v5';
+const CACHE = 'forge-v6';
 const ASSETS = [
   '/', '/index.html', '/iron.html', '/anvil.html', '/vault.html',
   '/guild.html', '/library.html', '/quick-input.html', '/login.html', '/migrate.html',
