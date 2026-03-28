@@ -147,6 +147,27 @@ function toSnake(obj) {
   );
 }
 
+// Rename legacy fields that don't match the Supabase schema
+const FIELD_RENAMES = { desc: 'description' };
+
+function renameFields(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v]) => [FIELD_RENAMES[k] || k, v])
+  );
+}
+
+// Replace non-UUID id values with real UUIDs
+function ensureUuidId(obj) {
+  if (!obj.id || isValidUuid(obj.id)) return obj;
+  obj.id = crypto.randomUUID();
+  return obj;
+}
+
+function isValidUuid(s) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+}
+
 async function runMigration() {
   if (!stateData) { log('No data loaded', 'log-err'); return; }
 
@@ -204,7 +225,9 @@ async function runMigration() {
     }
 
     const prepared = rows.map(row => {
-      const snaked = toSnake(row);
+      const renamed = renameFields(row);
+      const snaked = toSnake(renamed);
+      ensureUuidId(snaked);
       snaked.user_id = userId;
       return snaked;
     });
