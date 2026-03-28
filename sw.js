@@ -1,10 +1,21 @@
-const CACHE = 'forge-v3';
+const CACHE = 'forge-v4';
 const ASSETS = [
   '/', '/index.html', '/iron.html', '/anvil.html', '/vault.html',
   '/guild.html', '/library.html', '/quick-input.html', '/login.html',
   '/forge-shared.css', '/forge-shared.js', '/supabase-config.js',
   '/data-layer.js', '/input-parser.js', '/manifest.json'
 ];
+
+// Strip the "redirected" flag so responses can be used with respondWith()
+function cleanResponse(r) {
+  if (!r) return r;
+  if (!r.redirected) return r;
+  return new Response(r.body, {
+    status: r.status,
+    statusText: r.statusText,
+    headers: r.headers
+  });
+}
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
@@ -26,6 +37,7 @@ self.addEventListener('fetch', e => {
   // Skip non-GET requests
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request.url))
+    caches.match(e.request)
+      .then(r => cleanResponse(r) || fetch(e.request.url))
   );
 });
